@@ -83,6 +83,11 @@ public class BackendCashierController extends BaseController {
     private MerchantService merchantService;
 
     /**
+     * 员工服务接口
+     * */
+    private StaffService staffService;
+
+    /**
      * 收银台初始化
      */
     @ApiOperation(value = "收银台初始化")
@@ -115,12 +120,14 @@ public class BackendCashierController extends BaseController {
 
         List<MtGoodsCate> cateList = cateService.getCateList(accountInfo.getMerchantId(), storeId, null, StatusEnum.ENABLED.getKey());
         Map<String, Object> goodsData = goodsService.getStoreGoodsList(storeId, "", PlatformTypeEnum.PC.getCode(), cateId, page, pageSize);
+        MtStaff staffInfo = staffService.queryStaffById(accountInfo.getStaffId());
 
         Map<String, Object> result = new HashMap<>();
         result.put("imagePath", settingService.getUploadBasePath());
         result.put("storeInfo", storeInfo);
         result.put("memberInfo", memberInfo);
         result.put("accountInfo", accountInfo);
+        result.put("staffInfo", staffInfo);
         result.put("goodsList", goodsData.get("goodsList"));
         result.put("totalGoods", goodsData.get("total"));
         result.put("cateList", cateList);
@@ -162,7 +169,7 @@ public class BackendCashierController extends BaseController {
     @RequestMapping(value = "/getGoodsInfo/{id}", method = RequestMethod.GET)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('cashier:index')")
-    public ResponseObject getGoodsInfo(@PathVariable("id") Integer goodsId) throws InvocationTargetException, IllegalAccessException {
+    public ResponseObject getGoodsInfo(@PathVariable("id") Integer goodsId) {
         GoodsDto goodsInfo = goodsService.getGoodsDetail(goodsId, false);
 
         Map<String, Object> result = new HashMap<>();

@@ -11,8 +11,10 @@ import com.fuint.repository.model.MtGoods;
 import com.fuint.repository.model.MtGoodsSku;
 import com.fuint.repository.model.MtGoodsSpec;
 import org.springframework.web.multipart.MultipartFile;
-import java.lang.reflect.InvocationTargetException;
-import java.util.*;
+
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 商品业务接口
@@ -33,12 +35,12 @@ public interface GoodsService {
     /**
      * 保存商品
      *
-     * @param  reqDto 商品信息
+     * @param  mtGoods 商品信息
      * @param  storeIds 分配店铺
      * @throws BusinessCheckException
      * @return
      */
-    MtGoods saveGoods(MtGoods reqDto, String storeIds) throws BusinessCheckException;
+    MtGoods saveGoods(MtGoods mtGoods, String storeIds) throws BusinessCheckException;
 
     /**
      * 更新商品状态
@@ -58,7 +60,7 @@ public interface GoodsService {
      * @throws BusinessCheckException
      * @return
      */
-    MtGoods queryGoodsById(Integer id) throws BusinessCheckException;
+    MtGoods queryGoodsById(Integer id);
 
     /**
      * 根据编码获取商品信息
@@ -68,7 +70,7 @@ public interface GoodsService {
      * @throws BusinessCheckException
      * @return
      */
-    MtGoods queryGoodsByGoodsNo(Integer merchantId, String goodsNo) throws BusinessCheckException;
+    MtGoods queryGoodsByGoodsNo(Integer merchantId, String goodsNo);
 
     /**
      * 根据条码获取sku信息
@@ -77,16 +79,15 @@ public interface GoodsService {
      * @throws BusinessCheckException
      * @return
      * */
-    MtGoodsSku getSkuInfoBySkuNo(String skuNo) throws BusinessCheckException;
+    MtGoodsSku getSkuInfoBySkuNo(String skuNo);
 
     /**
      * 根据ID获取商品详情
      *
      * @param  id 商品ID
-     * @throws BusinessCheckException
      * @return
      */
-    GoodsDto getGoodsDetail(Integer id, boolean getDeleteSpec) throws InvocationTargetException, IllegalAccessException;
+    GoodsDto getGoodsDetail(Integer id, boolean getDeleteSpec);
 
     /**
      * 获取店铺的商品列表
