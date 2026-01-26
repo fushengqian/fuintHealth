@@ -1,13 +1,14 @@
 package com.fuint.common.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fuint.common.domain.TreeNode;
 import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.module.backendApi.request.DutyStatusRequest;
 import com.fuint.repository.model.TDuty;
 import com.fuint.repository.model.TSource;
-import com.fuint.common.domain.TreeNode;
+
 import java.util.List;
 
 /**
@@ -17,7 +18,7 @@ import java.util.List;
  * CopyRight https://www.fuint.cn
  */
 public interface DutyService extends IService<TDuty> {
-    
+
     /**
      * 角色保存方法
      *
