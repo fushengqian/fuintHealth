@@ -30,17 +30,17 @@ public interface GoodsService {
      * @param  param
      * @return
      */
-    PaginationResponse<GoodsDto> queryGoodsListByPagination(GoodsListParam param) throws BusinessCheckException;
+    PaginationResponse<GoodsDto> queryGoodsListByPagination(GoodsListParam param);
 
     /**
      * 保存商品
      *
-     * @param  mtGoods 商品信息
+     * @param  reqDto 商品信息
      * @param  storeIds 分配店铺
      * @throws BusinessCheckException
      * @return
      */
-    MtGoods saveGoods(MtGoods mtGoods, String storeIds) throws BusinessCheckException;
+    MtGoods saveGoods(MtGoods reqDto, String storeIds) throws BusinessCheckException;
 
     /**
      * 更新商品状态
@@ -57,7 +57,6 @@ public interface GoodsService {
      * 根据ID获取商品信息
      *
      * @param  id 商品ID
-     * @throws BusinessCheckException
      * @return
      */
     MtGoods queryGoodsById(Integer id);
@@ -67,7 +66,6 @@ public interface GoodsService {
      *
      * @param  merchantId 商户ID
      * @param  goodsNo 商品编码
-     * @throws BusinessCheckException
      * @return
      */
     MtGoods queryGoodsByGoodsNo(Integer merchantId, String goodsNo);
@@ -76,7 +74,6 @@ public interface GoodsService {
      * 根据条码获取sku信息
      *
      * @param  skuNo skuNo
-     * @throws BusinessCheckException
      * @return
      * */
     MtGoodsSku getSkuInfoBySkuNo(String skuNo);
@@ -100,7 +97,7 @@ public interface GoodsService {
      * @param pageSize 每页数量
      * @return
      * */
-    Map<String, Object> getStoreGoodsList(Integer storeId, String keyword, String platform, Integer cateId, Integer page, Integer pageSize) throws BusinessCheckException;
+    Map<String, Object> getStoreGoodsList(Integer storeId, String keyword, String platform, Integer cateId, Integer page, Integer pageSize);
 
     /**
      * 根据skuId获取规格列表
@@ -108,7 +105,7 @@ public interface GoodsService {
      * @param skuId
      * @return
      * */
-    List<GoodsSpecValueDto> getSpecListBySkuId(Integer skuId) throws BusinessCheckException;
+    List<GoodsSpecValueDto> getSpecListBySkuId(Integer skuId);
 
     /**
      * 获取规格详情

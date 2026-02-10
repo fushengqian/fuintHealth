@@ -23,7 +23,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
-import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -94,13 +93,13 @@ public class BackendCashierController extends BaseController {
     @RequestMapping(value = "/init/{userId}", method = RequestMethod.GET)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('cashier:index')")
-    public ResponseObject init(HttpServletRequest request, @PathVariable("userId") Integer userId) throws BusinessCheckException {
+    public ResponseObject init(HttpServletRequest request, @PathVariable("userId") Integer userId) {
         Integer page = request.getParameter("page") == null ? Constants.PAGE_NUMBER : Integer.parseInt(request.getParameter("page"));
         Integer pageSize = request.getParameter("pageSize") == null ? Constants.PAGE_SIZE : Integer.parseInt(request.getParameter("pageSize"));
         Integer cateId = request.getParameter("cateId") == null ? 0 : Integer.parseInt(request.getParameter("cateId"));
 
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
-        Integer storeId = (accountInfo.getStoreId() == null || accountInfo.getStoreId() < 1) ? 0 : accountInfo.getStoreId();
+        Integer storeId = accountInfo.getStoreId() == null ? 0 : accountInfo.getStoreId();
         MtStore storeInfo = null;
         if (storeId == null || storeId < 1) {
             MtMerchant mtMerchant = merchantService.queryMerchantById(accountInfo.getMerchantId());
@@ -125,9 +124,9 @@ public class BackendCashierController extends BaseController {
         Map<String, Object> result = new HashMap<>();
         result.put("imagePath", settingService.getUploadBasePath());
         result.put("storeInfo", storeInfo);
+        result.put("staffInfo", staffInfo);
         result.put("memberInfo", memberInfo);
         result.put("accountInfo", accountInfo);
-        result.put("staffInfo", staffInfo);
         result.put("goodsList", goodsData.get("goodsList"));
         result.put("totalGoods", goodsData.get("total"));
         result.put("cateList", cateList);
@@ -142,7 +141,7 @@ public class BackendCashierController extends BaseController {
     @RequestMapping(value = "/searchGoods", method = RequestMethod.POST)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('cashier:index')")
-    public ResponseObject searchGoods(@RequestBody Map<String, Object> param) throws BusinessCheckException {
+    public ResponseObject searchGoods(@RequestBody Map<String, Object> param) {
         String keyword =  param.get("keyword") == null ? "" : param.get("keyword").toString();
 
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
@@ -241,7 +240,7 @@ public class BackendCashierController extends BaseController {
     @RequestMapping(value = "/getMemberInfo", method = RequestMethod.POST)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('cashier:index')")
-    public ResponseObject getMemberInfo(@RequestBody Map<String, Object> param) throws BusinessCheckException {
+    public ResponseObject getMemberInfo(@RequestBody Map<String, Object> param) {
         String keyword = param.get("keyword") == null ? "" : param.get("keyword").toString();
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
         if (StringUtil.isEmpty(keyword)) {
@@ -276,7 +275,7 @@ public class BackendCashierController extends BaseController {
     @RequestMapping(value = "/getMemberInfoById/{userId}", method = RequestMethod.GET)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('cashier:index')")
-    public ResponseObject getMemberInfoById(@PathVariable("userId") String userId) throws BusinessCheckException {
+    public ResponseObject getMemberInfoById(@PathVariable("userId") String userId) {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
 
         if (StringUtil.isEmpty(userId)) {
@@ -335,7 +334,7 @@ public class BackendCashierController extends BaseController {
     @RequestMapping(value = "/getHangUpList", method = RequestMethod.GET)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('cashier:index')")
-    public ResponseObject getHangUpList() throws BusinessCheckException {
+    public ResponseObject getHangUpList() {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
 
         List<HangUpDto> dataList = new ArrayList<>();

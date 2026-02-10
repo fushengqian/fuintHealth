@@ -4,6 +4,7 @@ import com.fuint.common.dto.OpenGiftDto;
 import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.framework.web.ResponseObject;
 import com.fuint.repository.model.MtOpenGift;
+
 import java.util.Map;
 
 /**
@@ -18,10 +19,9 @@ public interface OpenGiftService {
      * 获取用户的开卡赠礼
      *
      * @param paramMap 查询参数
-     * @throws BusinessCheckException
      * @return
      * */
-    ResponseObject getOpenGiftList(Map<String, Object> paramMap) throws BusinessCheckException;
+    ResponseObject getOpenGiftList(Map<String, Object> paramMap);
 
     /**
      * 新增开卡赠礼

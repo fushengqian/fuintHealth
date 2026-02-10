@@ -200,14 +200,14 @@ public class BackendUserCouponController extends BaseController {
     @RequestMapping(value = "/exportList", method = RequestMethod.GET)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('coupon:userCoupon:index')")
-    public void exportList(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    public void exportList(HttpServletRequest request, HttpServletResponse response) {
         String mobile = request.getParameter("mobile") == null ? "" : request.getParameter("mobile");
         String userId = request.getParameter("userId") == null ? "" : request.getParameter("userId");
         String couponId = request.getParameter("couponId") == null ? "" : request.getParameter("couponId");
         String status = request.getParameter("status") == null ? "" : request.getParameter("status");
         String userCouponId = request.getParameter("id") == null ? "" : request.getParameter("id");
 
-        AccountInfo accountInfo = TokenUtil.getAccountInfo();
+        AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getParameter("token"));
         if (accountInfo == null) {
             logger.error("导出会员卡券失败：登录信息失效");
             return;

@@ -94,7 +94,7 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
      * @return
      */
     @Override
-    public PaginationResponse<GoodsDto> queryGoodsListByPagination(GoodsListParam param) throws BusinessCheckException {
+    public PaginationResponse<GoodsDto> queryGoodsListByPagination(GoodsListParam param) {
         LambdaQueryWrapper<MtGoods> lambdaQueryWrapper = Wrappers.lambdaQuery();
         lambdaQueryWrapper.ne(MtGoods::getStatus, StatusEnum.DISABLE.getKey());
 
@@ -121,15 +121,15 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
         Integer storeId = param.getStoreId();
         if (storeId != null && storeId > 0 ) {
             lambdaQueryWrapper.and(qw -> qw.eq(MtGoods::getStoreId, storeId)
-                    .or(qw2 -> qw2.eq(MtGoods::getStoreId, 0)
-                            .inSql(MtGoods::getId, "SELECT s.GOODS_ID FROM mt_store_goods s WHERE s.STORE_ID = "+storeId+" AND s.status = 'A'")));
+                                        .or(qw2 -> qw2.eq(MtGoods::getStoreId, 0)
+                                        .inSql(MtGoods::getId, "SELECT s.GOODS_ID FROM mt_store_goods s WHERE s.STORE_ID = "+storeId+" AND s.status = 'A'")));
         }
         String type = param.getType();
         if (StringUtils.isNotBlank(type)) {
             lambdaQueryWrapper.eq(MtGoods::getType, type);
         }
         Integer cateId = param.getCateId();
-        if (cateId != null) {
+        if (cateId != null && cateId > 0) {
             lambdaQueryWrapper.eq(MtGoods::getCateId, cateId);
         }
         String hasStock = param.getStock();
@@ -214,37 +214,37 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
         List<GoodsDto> dataList = new ArrayList<>();
         String basePath = settingService.getUploadBasePath();
         for (MtGoods mtGoods : goodsList) {
-            MtGoodsCate cateInfo = null;
-            if (mtGoods.getCateId() != null) {
-                cateInfo = cateService.queryCateById(mtGoods.getCateId());
-            }
-            GoodsDto item = new GoodsDto();
-            item.setId(mtGoods.getId());
-            item.setInitSale(mtGoods.getInitSale());
-            if (StringUtil.isNotEmpty(mtGoods.getLogo())) {
-                item.setLogo(basePath + mtGoods.getLogo());
-            }
-            item.setStoreId(mtGoods.getStoreId());
-            if (mtGoods.getStoreId() != null) {
-                MtStore storeInfo = storeService.queryStoreById(mtGoods.getStoreId());
-                item.setStoreInfo(storeInfo);
-            }
-            item.setName(mtGoods.getName());
-            item.setGoodsNo(mtGoods.getGoodsNo());
-            item.setCateId(mtGoods.getCateId());
-            item.setStock(mtGoods.getStock());
-            item.setCateInfo(cateInfo);
-            item.setType(mtGoods.getType());
-            item.setPrice(mtGoods.getPrice());
-            item.setLinePrice(mtGoods.getLinePrice());
-            item.setSalePoint(mtGoods.getSalePoint());
-            item.setCreateTime(mtGoods.getCreateTime());
-            item.setUpdateTime(mtGoods.getUpdateTime());
-            item.setStatus(mtGoods.getStatus());
-            item.setOperator(mtGoods.getOperator());
-            item.setWeight(mtGoods.getWeight());
-            item.setSort(mtGoods.getSort());
-            dataList.add(item);
+             MtGoodsCate cateInfo = null;
+             if (mtGoods.getCateId() != null) {
+                 cateInfo = cateService.queryCateById(mtGoods.getCateId());
+             }
+             GoodsDto item = new GoodsDto();
+             item.setId(mtGoods.getId());
+             item.setInitSale(mtGoods.getInitSale());
+             if (StringUtil.isNotEmpty(mtGoods.getLogo())) {
+                 item.setLogo(basePath + mtGoods.getLogo());
+             }
+             item.setStoreId(mtGoods.getStoreId());
+             if (mtGoods.getStoreId() != null) {
+                 MtStore storeInfo = storeService.queryStoreById(mtGoods.getStoreId());
+                 item.setStoreInfo(storeInfo);
+             }
+             item.setName(mtGoods.getName());
+             item.setGoodsNo(mtGoods.getGoodsNo());
+             item.setCateId(mtGoods.getCateId());
+             item.setStock(mtGoods.getStock());
+             item.setCateInfo(cateInfo);
+             item.setType(mtGoods.getType());
+             item.setPrice(mtGoods.getPrice());
+             item.setLinePrice(mtGoods.getLinePrice());
+             item.setSalePoint(mtGoods.getSalePoint());
+             item.setCreateTime(mtGoods.getCreateTime());
+             item.setUpdateTime(mtGoods.getUpdateTime());
+             item.setStatus(mtGoods.getStatus());
+             item.setOperator(mtGoods.getOperator());
+             item.setWeight(mtGoods.getWeight());
+             item.setSort(mtGoods.getSort());
+             dataList.add(item);
         }
 
         PageRequest pageRequest = PageRequest.of(param.getPage(), param.getPageSize());
@@ -506,7 +506,6 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
      * 根据ID获取商品信息
      *
      * @param  id 商品ID
-     * @throws BusinessCheckException
      * @return
      */
     @Override
@@ -523,7 +522,6 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
      *
      * @param  merchantId 商户ID
      * @param  goodsNo 商品编码
-     * @throws BusinessCheckException
      * @return
      */
     @Override
@@ -535,7 +533,7 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
      * 根据条码获取sku信息
      *
      * @param  skuNo skuNo
-     * @throws BusinessCheckException
+     * @return
      * */
     @Override
     public MtGoodsSku getSkuInfoBySkuNo(String skuNo) {
@@ -633,11 +631,10 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
      * @param cateId 分类ID
      * @param page 当前页码
      * @param pageSize 每页页数
-     * @throws BusinessCheckException
      * @return
      * */
     @Override
-    public Map<String, Object> getStoreGoodsList(Integer storeId, String keyword, String platform, Integer cateId, Integer page, Integer pageSize) throws BusinessCheckException {
+    public Map<String, Object> getStoreGoodsList(Integer storeId, String keyword, String platform, Integer cateId, Integer page, Integer pageSize) {
         MtStore mtStore = storeService.queryStoreById(storeId);
         if (mtStore == null) {
             Map<String, Object> result = new HashMap<>();
@@ -1031,8 +1028,8 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
                      }
                  }
             }
-            // 更新商品价格和库存
-            if (mtGoods != null) {
+            // 多规格商品，更新商品价格和库存
+            if (mtGoods != null && mtGoods.getIsSingleSpec().equals(YesOrNoEnum.NO.getKey())) {
                 mtGoods.setStock(totalStock);
                 mtGoods.setPrice(price);
                 mtGoodsMapper.updateById(mtGoods);

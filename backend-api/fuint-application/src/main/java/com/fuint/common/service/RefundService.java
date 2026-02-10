@@ -8,6 +8,7 @@ import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.framework.web.ResponseObject;
 import com.fuint.repository.model.MtRefund;
+
 import java.util.Date;
 import java.util.Map;
 
@@ -25,38 +26,38 @@ public interface RefundService extends IService<MtRefund> {
      * @param paginationRequest
      * @return
      */
-    PaginationResponse<RefundDto> getRefundListByPagination(PaginationRequest paginationRequest) throws BusinessCheckException;
+    PaginationResponse<RefundDto> getRefundListByPagination(PaginationRequest paginationRequest);
 
     /**
      * 获取用户的售后订单
      * @param paramMap 查询参数
-     * @throws BusinessCheckException
+     * @return
      * */
-    ResponseObject getUserRefundList(Map<String, Object> paramMap) throws BusinessCheckException;
+    ResponseObject getUserRefundList(Map<String, Object> paramMap);
 
     /**
      * 创建售后订单
      *
-     * @param reqDto
-     * @throws BusinessCheckException
+     * @param refundDto
+     * @return
      */
-    MtRefund createRefund(RefundDto reqDto) throws BusinessCheckException;
+    MtRefund createRefund(RefundDto refundDto);
 
     /**
      * 根据ID获取售后订单信息
      *
      * @param id ID
-     * @throws BusinessCheckException
+     * @return
      */
-    RefundDto getRefundById(Integer id) throws BusinessCheckException;
+    RefundDto getRefundById(Integer id);
 
     /**
      * 根据订单ID获取售后订单信息
      *
      * @param  orderId
-     * @throws BusinessCheckException
+     * @return
      */
-    MtRefund getRefundByOrderId(Integer orderId) throws BusinessCheckException;
+    MtRefund getRefundByOrderId(Integer orderId);
 
     /**
      * 更新售后订单
@@ -90,5 +91,5 @@ public interface RefundService extends IService<MtRefund> {
      * @param endTime
      * @return
      * */
-    Long getRefundCount(Date beginTime, Date endTime) throws BusinessCheckException;
+    Long getRefundCount(Date beginTime, Date endTime);
 }

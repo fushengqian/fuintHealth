@@ -204,6 +204,7 @@ public class BookCateServiceImpl extends ServiceImpl<MtBookCateMapper, MtBookCat
      *
      * @param  merchantId 商户ID
      * @param  storeId 店铺ID
+     * @throws BusinessCheckException
      * @return
      * */
     @Override
@@ -224,7 +225,7 @@ public class BookCateServiceImpl extends ServiceImpl<MtBookCateMapper, MtBookCat
         String baseImage = settingService.getUploadBasePath();
         if (dataList.size() > 0) {
             for (MtBookCate mtBookCate : dataList) {
-                 mtBookCate.setLogo(baseImage + mtBookCate.getLogo());
+                mtBookCate.setLogo(baseImage + mtBookCate.getLogo());
             }
         }
         return dataList;

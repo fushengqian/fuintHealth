@@ -159,7 +159,7 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
      * @return
      * */
     @Override
-    public MtUser getCurrentUserInfo(HttpServletRequest request, Integer userId, String token) throws BusinessCheckException {
+    public MtUser getCurrentUserInfo(HttpServletRequest request, Integer userId, String token) {
         MtUser mtUser = null;
 
         // 没有会员信息，则查询是否是后台收银员下单
@@ -201,7 +201,7 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
      * @return
      */
     @Override
-    public PaginationResponse<UserDto> queryMemberListByPagination(MemberPage memberPage) throws BusinessCheckException {
+    public PaginationResponse<UserDto> queryMemberListByPagination(MemberPage memberPage) {
         Page<MtUser> pageHelper = PageHelper.startPage(memberPage.getPage(), memberPage.getPageSize());
         LambdaQueryWrapper<MtUser> wrapper = Wrappers.lambdaQuery();
         wrapper.ne(MtUser::getStatus, StatusEnum.DISABLE.getKey());
@@ -560,7 +560,6 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
      *
      * @param  merchantId 商户ID
      * @param  mobile 手机号
-     * @throws BusinessCheckException
      * @return
      */
     @Override
@@ -600,11 +599,10 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
      * 根据会员ID获取会员信息
      *
      * @param  id 会员ID
-     * @throws BusinessCheckException
      * @return
      */
     @Override
-    public MtUser queryMemberById(Integer id) throws BusinessCheckException {
+    public MtUser queryMemberById(Integer id) {
         MtUser mtUser = mtUserMapper.selectById(id);
 
         if (mtUser != null) {
@@ -626,7 +624,11 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
                 if (userGradeId == null && initGrade != null) {
                     mtUser.setGradeId(initGrade.getId());
                     updateById(mtUser);
-                    openGiftService.openGift(mtUser.getId(), initGrade.getId(), false);
+                    try {
+                        openGiftService.openGift(mtUser.getId(), initGrade.getId(), false);
+                    } catch (Exception e) {
+                        logger.error("开卡赠礼失败，userId = {}, message = {}", mtUser.getId(), e.getMessage());
+                    }
                 } else {
                     // 会员等级不存在或已禁用、删除，就把会员等级置为初始等级
                     MtUserGrade myGrade = userGradeService.queryUserGradeById(mtUser.getMerchantId(), userGradeId, id);
@@ -648,7 +650,6 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
      *
      * @param  merchantId 商户ID
      * @param  name 会员名称
-     * @throws BusinessCheckException
      * @return
      */
     @Override
@@ -801,7 +802,6 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
      * 根据等级ID获取会员等级信息
      *
      * @param  id 等级ID
-     * @throws BusinessCheckException
      * @return
      */
     @Override

@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
  * CopyRight https://www.fuint.cn
  */
 @Configuration
-public class WebConfig extends WebMvcConfigurationSupport {
+public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
@@ -37,7 +37,6 @@ public class WebConfig extends WebMvcConfigurationSupport {
                 "classpath:/META-INF/resources/");
         registry.addResourceHandler("/webjars/**").addResourceLocations(
                 "classpath:/META-INF/resources/webjars/");
-        super.addResourceHandlers(registry);
     }
 
     @Bean

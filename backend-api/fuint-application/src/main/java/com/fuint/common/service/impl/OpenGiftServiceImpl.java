@@ -73,12 +73,11 @@ public class OpenGiftServiceImpl extends ServiceImpl<MtOpenGiftMapper, MtOpenGif
     /**
      * 获取开卡赠礼列表
      * @param  paramMap
-     * @throws BusinessCheckException
      * @return
      * */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ResponseObject getOpenGiftList(Map<String, Object> paramMap) throws BusinessCheckException {
+    public ResponseObject getOpenGiftList(Map<String, Object> paramMap) {
         Integer pageNumber = paramMap.get("pageNumber") == null ? Constants.PAGE_NUMBER : Integer.parseInt(paramMap.get("pageNumber").toString());
         Integer pageSize = paramMap.get("pageSize") == null ? Constants.PAGE_SIZE : Integer.parseInt(paramMap.get("pageSize").toString());
 
@@ -148,11 +147,10 @@ public class OpenGiftServiceImpl extends ServiceImpl<MtOpenGiftMapper, MtOpenGif
      * 根据ID获取开卡赠礼详情
      *
      * @param  id 开卡赠礼ID
-     * @throws BusinessCheckException
      * @return
      */
     @Override
-    public OpenGiftDto getOpenGiftDetail(Integer id) throws BusinessCheckException {
+    public OpenGiftDto getOpenGiftDetail(Integer id) {
         MtOpenGift openGift = mtOpenGiftMapper.selectById(id);
         return dealDetail(openGift);
     }
@@ -167,10 +165,10 @@ public class OpenGiftServiceImpl extends ServiceImpl<MtOpenGiftMapper, MtOpenGif
      */
     @Override
     @OperationServiceLog(description = "删除开卡赠礼")
-    public void deleteOpenGift(Integer id, String operator) {
+    public void deleteOpenGift(Integer id, String operator) throws BusinessCheckException {
         MtOpenGift MtOpenGift = mtOpenGiftMapper.selectById(id);
         if (null == MtOpenGift) {
-            return;
+            throw new BusinessCheckException("数据不存在，删除开卡赠礼失败");
         }
 
         MtOpenGift.setStatus(StatusEnum.DISABLE.getKey());
@@ -340,26 +338,25 @@ public class OpenGiftServiceImpl extends ServiceImpl<MtOpenGiftMapper, MtOpenGif
      * 赠礼详情
      *
      * @param  openGiftInfo 赠礼详情
-     * @throws BusinessCheckException
      * @return OpenGiftDto
      * */
-    private OpenGiftDto dealDetail(MtOpenGift openGiftInfo) throws BusinessCheckException {
-        OpenGiftDto dto = new OpenGiftDto();
+    private OpenGiftDto dealDetail(MtOpenGift openGiftInfo) {
+        OpenGiftDto openGiftDto = new OpenGiftDto();
 
-        dto.setId(openGiftInfo.getId());
-        dto.setCreateTime(DateUtil.formatDate(openGiftInfo.getCreateTime(), "yyyy.MM.dd HH:mm"));
-        dto.setUpdateTime(DateUtil.formatDate(openGiftInfo.getUpdateTime(), "yyyy.MM.dd HH:mm"));
-        dto.setStatus(openGiftInfo.getStatus());
-        dto.setCouponNum(openGiftInfo.getCouponNum());
-        dto.setPoint(openGiftInfo.getPoint());
-        dto.setOperator(openGiftInfo.getOperator());
+        openGiftDto.setId(openGiftInfo.getId());
+        openGiftDto.setCreateTime(DateUtil.formatDate(openGiftInfo.getCreateTime(), "yyyy.MM.dd HH:mm"));
+        openGiftDto.setUpdateTime(DateUtil.formatDate(openGiftInfo.getUpdateTime(), "yyyy.MM.dd HH:mm"));
+        openGiftDto.setStatus(openGiftInfo.getStatus());
+        openGiftDto.setCouponNum(openGiftInfo.getCouponNum());
+        openGiftDto.setPoint(openGiftInfo.getPoint());
+        openGiftDto.setOperator(openGiftInfo.getOperator());
 
         MtCoupon couponInfo = couponService.queryCouponById(openGiftInfo.getCouponId());
-        dto.setCouponInfo(couponInfo);
+        openGiftDto.setCouponInfo(couponInfo);
 
         MtUserGrade gradeInfo = userGradeService.queryUserGradeById(openGiftInfo.getMerchantId(), openGiftInfo.getGradeId(), 0);
-        dto.setGradeInfo(gradeInfo);
+        openGiftDto.setGradeInfo(gradeInfo);
 
-        return dto;
+        return openGiftDto;
     }
 }

@@ -194,7 +194,7 @@ public class BannerServiceImpl extends ServiceImpl<MtBannerMapper, MtBanner> imp
     /**
      * 根据条件搜索焦点图
      *
-     * @param params 查询参数
+     * @param  params 查询参数
      * @return
      * */
     @Override

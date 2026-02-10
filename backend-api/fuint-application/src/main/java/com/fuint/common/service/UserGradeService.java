@@ -6,6 +6,7 @@ import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.repository.model.MtUser;
 import com.fuint.repository.model.MtUserGrade;
+
 import java.util.List;
 
 /**
@@ -45,9 +46,9 @@ public interface UserGradeService extends IService<MtUserGrade> {
     /**
      * 根据ID获取会员等级信息
      *
-     * @param merchantId 商户ID
-     * @param gradeId 等级ID
-     * @param userId 会员ID
+     * @param merchantId
+     * @param gradeId ID
+     * @param userId
      * @return
      */
     MtUserGrade queryUserGradeById(Integer merchantId, Integer gradeId, Integer userId);
@@ -57,10 +58,9 @@ public interface UserGradeService extends IService<MtUserGrade> {
      *
      * @param  id      ID
      * @param  operator 操作人
-     * @throws BusinessCheckException
      * @return
      */
-    Integer deleteUserGrade(Integer id, String operator) throws BusinessCheckException;
+    Integer deleteUserGrade(Integer id, String operator);
 
     /**
      * 获取默认的会员等级

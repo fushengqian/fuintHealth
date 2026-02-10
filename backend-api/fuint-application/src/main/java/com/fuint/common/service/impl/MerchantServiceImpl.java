@@ -195,7 +195,6 @@ public class MerchantServiceImpl extends ServiceImpl<MtMerchantMapper, MtMerchan
      * 根据ID获取商户信息
      *
      * @param  id 商户ID
-     * @throws BusinessCheckException
      * @return
      */
     @Override
@@ -210,7 +209,6 @@ public class MerchantServiceImpl extends ServiceImpl<MtMerchantMapper, MtMerchan
      * 根据名称获取商户信息
      *
      * @param  name 商户名称
-     * @throws BusinessCheckException
      * @return
      */
     @Override
@@ -355,7 +353,7 @@ public class MerchantServiceImpl extends ServiceImpl<MtMerchantMapper, MtMerchan
      * @return
      * */
     @Override
-    public MerchantSettingDto getMerchantSettingInfo(Integer merchantId, Integer storeId) throws BusinessCheckException {
+    public MerchantSettingDto getMerchantSettingInfo(Integer merchantId, Integer storeId) {
        String name = "";
        Integer id = merchantId;
        String contact = "";

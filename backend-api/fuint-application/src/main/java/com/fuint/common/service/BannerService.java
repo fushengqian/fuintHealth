@@ -30,6 +30,7 @@ public interface BannerService extends IService<MtBanner> {
      * 添加Banner
      *
      * @param reqBannerDto
+     * @throws BusinessCheckException
      * @return
      */
     MtBanner addBanner(BannerDto reqBannerDto) throws BusinessCheckException;
@@ -54,7 +55,6 @@ public interface BannerService extends IService<MtBanner> {
      * 根据条件搜索焦点图
      *
      * @param params 查询参数
-     * @throws BusinessCheckException
      * @return
      * */
     List<MtBanner> queryBannerListByParams(Map<String, Object> params);
