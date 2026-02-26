@@ -1,17 +1,16 @@
 package com.fuint.module.merchantApi.controller;
 
 import com.fuint.common.dto.UserInfo;
+import com.fuint.common.param.StaffPage;
 import com.fuint.common.param.StaffParam;
 import com.fuint.common.service.MemberService;
 import com.fuint.common.service.MerchantService;
 import com.fuint.common.service.StaffService;
 import com.fuint.common.util.TokenUtil;
 import com.fuint.framework.exception.BusinessCheckException;
-import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.framework.web.BaseController;
 import com.fuint.framework.web.ResponseObject;
-import com.fuint.module.merchantApi.request.StaffListRequest;
 import com.fuint.repository.model.MtStaff;
 import com.fuint.repository.model.MtUser;
 import com.fuint.utils.StringUtil;
@@ -55,7 +54,7 @@ public class MerchantStaffController extends BaseController {
     @ApiOperation(value = "员工列表")
     @RequestMapping(value = "/staffList", method = RequestMethod.POST)
     @CrossOrigin
-    public ResponseObject staffList(HttpServletRequest request, @RequestBody StaffListRequest requestParams) {
+    public ResponseObject staffList(HttpServletRequest request, @RequestBody StaffPage staffPage) {
         UserInfo userInfo = TokenUtil.getUserInfo();
         MtUser mtUser = memberService.queryMemberById(userInfo.getId());
 
@@ -69,16 +68,11 @@ public class MerchantStaffController extends BaseController {
             return getFailureResult(201, "您没有操作权限");
         }
 
-        Map<String, Object> params = new HashMap<>();
-        params.put("merchantId", staff.getMerchantId());
+        staffPage.setMerchantId(staff.getMerchantId());
         if (staff.getStoreId() != null && staff.getStoreId() > 0) {
-            params.put("storeId", staff.getStoreId());
+            staffPage.setStoreId(staff.getStoreId());
         }
-        if (StringUtil.isNotEmpty(requestParams.getKeyword())) {
-            params.put("keyword", requestParams.getKeyword());
-        }
-
-        PaginationResponse paginationResponse = staffService.queryStaffListByPagination(new PaginationRequest(requestParams.getPage(), requestParams.getPageSize(), params));
+        PaginationResponse paginationResponse = staffService.queryStaffListByPagination(staffPage);
         Map<String, Object> result = new HashMap<>();
         result.put("content", paginationResponse.getContent());
         result.put("pageSize", paginationResponse.getPageSize());

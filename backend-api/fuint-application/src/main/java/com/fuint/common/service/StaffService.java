@@ -2,8 +2,8 @@ package com.fuint.common.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fuint.common.dto.StaffDto;
+import com.fuint.common.param.StaffPage;
 import com.fuint.framework.exception.BusinessCheckException;
-import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.repository.model.MtStaff;
 import java.util.List;
@@ -20,10 +20,10 @@ public interface StaffService extends IService<MtStaff> {
     /**
      * 员工查询列表
      *
-     * @param paginationRequest
+     * @param staffPage
      * @return
      */
-    PaginationResponse<StaffDto> queryStaffListByPagination(PaginationRequest paginationRequest);
+    PaginationResponse<StaffDto> queryStaffListByPagination(StaffPage staffPage);
 
     /**
      * 保存员工信息
@@ -39,6 +39,7 @@ public interface StaffService extends IService<MtStaff> {
      * 根据ID获取店铺信息
      *
      * @param  id 员工id
+     * @return
      */
     MtStaff queryStaffById(Integer id);
 

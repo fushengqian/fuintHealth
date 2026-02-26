@@ -4,6 +4,7 @@ import com.fuint.common.Constants;
 import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.dto.OpenGiftDto;
 import com.fuint.common.enums.StatusEnum;
+import com.fuint.common.param.StatusParam;
 import com.fuint.common.service.OpenGiftService;
 import com.fuint.common.service.UserGradeService;
 import com.fuint.common.util.TokenUtil;
@@ -176,19 +177,17 @@ public class BackendOpenGiftController extends BaseController {
     @RequestMapping(value = "/updateStatus", method = RequestMethod.POST)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('openGift:index')")
-    public ResponseObject updateStatus(@RequestBody Map<String, Object> param) throws BusinessCheckException {
+    public ResponseObject updateStatus(@RequestBody StatusParam param) throws BusinessCheckException {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
-        Integer id = param.get("id") == null ? 0 : Integer.parseInt(param.get("id").toString());
-        String status = param.get("status") == null ? StatusEnum.ENABLED.getKey() : param.get("status").toString();
 
-        OpenGiftDto info = openGiftService.getOpenGiftDetail(id);
+        OpenGiftDto info = openGiftService.getOpenGiftDetail(param.getId());
         if (info == null) {
             return getFailureResult(201, "开卡赠礼不存在");
         }
 
         MtOpenGift reqDto = new MtOpenGift();
-        reqDto.setId(id);
-        reqDto.setStatus(status);
+        reqDto.setId(param.getId());
+        reqDto.setStatus(param.getStatus());
         reqDto.setOperator(accountInfo.getAccountName());
 
         openGiftService.updateOpenGift(reqDto);

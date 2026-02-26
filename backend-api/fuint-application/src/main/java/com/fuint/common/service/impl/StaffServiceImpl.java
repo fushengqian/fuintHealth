@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fuint.common.dto.StaffDto;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.enums.YesOrNoEnum;
+import com.fuint.common.param.StaffPage;
 import com.fuint.common.service.*;
 import com.fuint.common.util.CommonUtil;
 import com.fuint.framework.annoation.OperationServiceLog;
@@ -70,40 +71,40 @@ public class StaffServiceImpl extends ServiceImpl<MtStaffMapper, MtStaff> implem
     /**
      * 员工查询列表
      *
-     * @param paginationRequest
+     * @param staffPage
      * @return
      */
     @Override
-    public PaginationResponse<StaffDto> queryStaffListByPagination(PaginationRequest paginationRequest) {
-        Page<MtStaff> pageHelper = PageHelper.startPage(paginationRequest.getCurrentPage(), paginationRequest.getPageSize());
+    public PaginationResponse<StaffDto> queryStaffListByPagination(StaffPage staffPage) {
+        Page<MtStaff> pageHelper = PageHelper.startPage(staffPage.getPage(), staffPage.getPageSize());
         LambdaQueryWrapper<MtStaff> lambdaQueryWrapper = Wrappers.lambdaQuery();
         lambdaQueryWrapper.ne(MtStaff::getAuditedStatus, StatusEnum.DISABLE.getKey());
 
-        String name = paginationRequest.getSearchParams().get("name") == null ? "" : paginationRequest.getSearchParams().get("name").toString();
+        String name = staffPage.getRealName();
         if (StringUtils.isNotBlank(name)) {
             lambdaQueryWrapper.like(MtStaff::getRealName, name);
         }
-        String status = paginationRequest.getSearchParams().get("status") == null ? "" : paginationRequest.getSearchParams().get("status").toString();
+        String status = staffPage.getAuditedStatus();
         if (StringUtils.isNotBlank(status)) {
             lambdaQueryWrapper.eq(MtStaff::getAuditedStatus, status);
         }
-        String mobile = paginationRequest.getSearchParams().get("mobile") == null ? "" : paginationRequest.getSearchParams().get("mobile").toString();
+        String mobile = staffPage.getMobile();
         if (StringUtils.isNotBlank(mobile)) {
             lambdaQueryWrapper.eq(MtStaff::getMobile, mobile);
         }
-        String merchantId = paginationRequest.getSearchParams().get("merchantId") == null ? "" : paginationRequest.getSearchParams().get("merchantId").toString();
-        if (StringUtils.isNotBlank(merchantId)) {
+        Integer merchantId = staffPage.getMerchantId();
+        if (merchantId != null && merchantId > 0) {
             lambdaQueryWrapper.eq(MtStaff::getMerchantId, merchantId);
         }
-        String storeId = paginationRequest.getSearchParams().get("storeId") == null ? "" : paginationRequest.getSearchParams().get("storeId").toString();
-        if (StringUtils.isNotBlank(storeId)) {
+        Integer storeId = staffPage.getStoreId();
+        if (storeId != null && storeId > 0) {
             lambdaQueryWrapper.eq(MtStaff::getStoreId, storeId);
         }
-        String category = paginationRequest.getSearchParams().get("category") == null ? "" : paginationRequest.getSearchParams().get("category").toString();
-        if (StringUtils.isNotBlank(category)) {
+        Integer category = staffPage.getCategory();
+        if (category != null && category > 0) {
             lambdaQueryWrapper.eq(MtStaff::getCategory, category);
         }
-        String keyword = paginationRequest.getSearchParams().get("keyword") == null ? "" : paginationRequest.getSearchParams().get("keyword").toString();
+        String keyword = staffPage.getKeyword();
         if (StringUtils.isNotBlank(keyword)) {
             lambdaQueryWrapper.and(wq -> wq
                     .eq(MtStaff::getMobile, keyword)
@@ -126,7 +127,7 @@ public class StaffServiceImpl extends ServiceImpl<MtStaffMapper, MtStaff> implem
                  dataList.add(staffDto);
             }
         }
-        PageRequest pageRequest = PageRequest.of(paginationRequest.getCurrentPage(), paginationRequest.getPageSize());
+        PageRequest pageRequest = PageRequest.of(staffPage.getPage(), staffPage.getPageSize());
         PageImpl pageImpl = new PageImpl(dataList, pageRequest, pageHelper.getTotal());
         PaginationResponse<StaffDto> paginationResponse = new PaginationResponse(pageImpl, StaffDto.class);
         paginationResponse.setTotalPages(pageHelper.getPages());

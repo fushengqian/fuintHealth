@@ -7,6 +7,7 @@ import com.fuint.common.enums.SettingTypeEnum;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.param.PrinterPage;
 import com.fuint.common.param.PrinterParam;
+import com.fuint.common.param.StatusParam;
 import com.fuint.common.service.OrderService;
 import com.fuint.common.service.PrinterService;
 import com.fuint.common.service.SettingService;
@@ -97,19 +98,16 @@ public class BackendPrinterController extends BaseController {
     @RequestMapping(value = "/updateStatus", method = RequestMethod.POST)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('printer:index')")
-    public ResponseObject updateStatus(@RequestBody Map<String, Object> params) throws BusinessCheckException {
-        String status = params.get("status") != null ? params.get("status").toString() : StatusEnum.ENABLED.getKey();
-        Integer id = params.get("id") == null ? 0 : Integer.parseInt(params.get("id").toString());
-
+    public ResponseObject updateStatus(@RequestBody StatusParam params) throws BusinessCheckException {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
 
-        MtPrinter mtPrinter = printerService.queryPrinterById(id);
+        MtPrinter mtPrinter = printerService.queryPrinterById(params.getId());
         if (mtPrinter == null) {
             return getFailureResult(201);
         }
 
         mtPrinter.setOperator(accountInfo.getAccountName());
-        mtPrinter.setStatus(status);
+        mtPrinter.setStatus(params.getStatus());
         printerService.updatePrinter(mtPrinter);
 
         return getSuccessResult(true);

@@ -3,6 +3,7 @@ package com.fuint.module.backendApi.controller;
 import com.fuint.common.Constants;
 import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.enums.StatusEnum;
+import com.fuint.common.param.StatusParam;
 import com.fuint.common.service.GenCodeService;
 import com.fuint.common.util.CommonUtil;
 import com.fuint.common.util.TokenUtil;
@@ -75,16 +76,13 @@ public class BackendGenCodeController extends BaseController {
     @RequestMapping(value = "/updateStatus", method = RequestMethod.POST)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('system:genCode:add')")
-    public ResponseObject updateStatus(@RequestBody Map<String, Object> params) throws BusinessCheckException {
-        String status = params.get("status") != null ? params.get("status").toString() : StatusEnum.ENABLED.getKey();
-        Integer id = params.get("id") == null ? 0 : Integer.parseInt(params.get("id").toString());
-
-        TGenCode tGenCode = genCodeService.queryGenCodeById(id);
+    public ResponseObject updateStatus(@RequestBody StatusParam params) throws BusinessCheckException {
+        TGenCode tGenCode = genCodeService.queryGenCodeById(params.getId());
         if (tGenCode == null) {
             return getFailureResult(201);
         }
-        tGenCode.setId(id);
-        tGenCode.setStatus(status);
+        tGenCode.setId(params.getId());
+        tGenCode.setStatus(params.getStatus());
         genCodeService.updateGenCode(tGenCode);
 
         return getSuccessResult(true);
