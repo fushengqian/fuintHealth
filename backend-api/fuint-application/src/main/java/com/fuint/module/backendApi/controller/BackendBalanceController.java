@@ -103,13 +103,15 @@ public class BackendBalanceController extends BaseController {
         if (!CommonUtil.isNumeric(amount)) {
             return getFailureResult(201, "充值金额必须是数字");
         }
-        if (userId < 1) {
+        if (userId == null || userId < 1) {
             return getFailureResult(201, "充值会员信息不能为空");
         }
 
         MtBalance mtBalance = new MtBalance();
         MtUser userInfo = memberService.queryMemberById(userId);
-
+        if (!accountInfo.getMerchantId().equals(userInfo.getMerchantId())) {
+            return getFailureResult(201, "不同商户，无充值权限");
+        }
         // 扣减余额
         if (type == 2) {
             if (userInfo.getBalance().compareTo(new BigDecimal(amount)) < 0) {
