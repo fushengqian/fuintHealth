@@ -8,7 +8,6 @@ import com.fuint.common.service.ReportService;
 import com.fuint.common.util.DateUtil;
 import com.fuint.common.util.TimeUtils;
 import com.fuint.common.util.TokenUtil;
-import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.framework.web.BaseController;
 import com.fuint.framework.web.ResponseObject;
 import com.fuint.utils.StringUtil;
@@ -22,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -60,15 +60,15 @@ public class BackendHomeController extends BaseController {
     @ApiOperation(value = "首页统计数据")
     @RequestMapping(value = "/index", method = RequestMethod.GET)
     @CrossOrigin
-    public ResponseObject index() throws BusinessCheckException {
-        Date beginTime = DateUtil.getDayBegin();
-        Date endTime = DateUtil.getDayEnd();
-
+    public ResponseObject index() throws ParseException {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
         Integer merchantId = accountInfo.getMerchantId();
         Integer storeId = accountInfo.getStoreId();
 
-        Map<String, Object> data = reportService.getReportOverview(merchantId, storeId, beginTime, endTime);
+        String startTime = DateUtil.formatDate(DateUtil.getDayBegin(), "yyyy-MM-dd HH:mm:ss");
+        String endTime = DateUtil.formatDate(DateUtil.getDayEnd(), "yyyy-MM-dd HH:mm:ss");
+
+        Map<String, Object> data = reportService.getReportOverview(merchantId, storeId, startTime, endTime);
 
         Map<String, Object> result = new HashMap<>();
         result.put("todayUser", data.get("userCount"));
@@ -79,7 +79,6 @@ public class BackendHomeController extends BaseController {
         result.put("totalPay", data.get("totalPayAmount"));
         result.put("todayActiveUser", data.get("activeUserCount"));
         result.put("totalPayUser", data.get("totalPayUserCount"));
-
 
         return getSuccessResult(result);
     }

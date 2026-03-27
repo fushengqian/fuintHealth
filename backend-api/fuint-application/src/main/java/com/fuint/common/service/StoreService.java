@@ -97,6 +97,15 @@ public interface StoreService extends IService<MtStore> {
     List<MtStore> getMyStoreList(Integer merchantId, Integer storeId, String status);
 
     /**
+     * 根据ID获取店铺列表
+     *
+     * @param merchantId 商户ID
+     * @param storeIds 店铺ID列表
+     * @return
+     * */
+    List<MtStore> getStoreListByIds(Integer merchantId, List<Integer> storeIds);
+
+    /**
      * 根据距离远近查找店铺
      *
      * @param merchantNo 商户号
