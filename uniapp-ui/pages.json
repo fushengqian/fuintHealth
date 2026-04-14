@@ -27,7 +27,7 @@
       "path": "pages/index/index",
       "style": {
         "navigationBarTitleText": "首页",
-        "navigationBarBackgroundColor": "#00acac",
+        "navigationBarBackgroundColor": "#6d64c5",
         "navigationBarTextStyle": "white",
         "enablePullDownRefresh": true
       }
@@ -36,7 +36,7 @@
       "path": "pages/category/index",
       "style": {
         "navigationBarTitleText": "微店",
-        "navigationBarBackgroundColor": "#00acac",
+        "navigationBarBackgroundColor": "#6d64c5",
         "navigationBarTextStyle": "white"
       }
     },
@@ -235,7 +235,7 @@
       "style": {
         "navigationBarTitleText": "订单详情",
         "navigationBarTextStyle": "white",
-        "navigationBarBackgroundColor": "#00acac"
+        "navigationBarBackgroundColor": "#6d64c5"
       }
     },
     {
@@ -473,6 +473,18 @@
                "style": {
                  "navigationBarTitleText": "编辑员工"
                }
+             }, 
+             {
+               "path": "refund/index",
+               "style": {
+                 "navigationBarTitleText": "售后订单"
+                }
+             },
+             {
+               "path": "refund/update",
+                "style": {
+                  "navigationBarTitleText": "售后更新"
+                }
              }
       ]
   }],

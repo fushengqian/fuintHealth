@@ -16,7 +16,6 @@ import com.fuint.repository.model.MtBanner;
 import com.fuint.repository.model.MtStaff;
 import com.fuint.repository.model.MtUser;
 import com.fuint.repository.model.MtUserGrade;
-import com.fuint.utils.StringUtil;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import lombok.AllArgsConstructor;
@@ -26,6 +25,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -106,6 +106,12 @@ public class UserGradeServiceImpl extends ServiceImpl<MtUserGradeMapper, MtUserG
         if (mtUserGrade.getDiscount() != null && (mtUserGrade.getDiscount() > 10 || mtUserGrade.getDiscount() < 0)) {
             throw new BusinessCheckException("会员折扣需在0和10之间");
         }
+        if (mtUserGrade.getRebate() != null && (mtUserGrade.getRebate() > 10 || mtUserGrade.getRebate() < 0)) {
+            throw new BusinessCheckException("返利比例需在0和10之间");
+        }
+        if (mtUserGrade.getStatus() == null) {
+            mtUserGrade.setStatus(StatusEnum.ENABLED.getKey());
+        }
         mtUserGradeMapper.insert(mtUserGrade);
         return mtUserGrade;
     }
@@ -145,6 +151,9 @@ public class UserGradeServiceImpl extends ServiceImpl<MtUserGradeMapper, MtUserG
     public MtUserGrade updateUserGrade(MtUserGrade mtUserGrade) throws BusinessCheckException {
         if (mtUserGrade.getDiscount() != null && (mtUserGrade.getDiscount() > 10 || mtUserGrade.getDiscount() < 0)) {
             throw new BusinessCheckException("会员折扣需在0和10之间");
+        }
+        if (mtUserGrade.getRebate() != null && (mtUserGrade.getRebate() > 10 || mtUserGrade.getRebate() < 0)) {
+            throw new BusinessCheckException("返利比例需在0和10之间");
         }
         if (mtUserGrade.getGrade() != null && (mtUserGrade.getGrade() <= 0)) {
             throw new BusinessCheckException("会员等级需大于0");

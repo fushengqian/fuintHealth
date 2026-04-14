@@ -9,9 +9,9 @@ import com.fuint.common.Constants;
 import com.fuint.common.bean.H5SceneInfo;
 import com.fuint.common.bean.WxPayBean;
 import com.fuint.common.bean.shoppingOrders.*;
-import com.fuint.common.dto.OrderDto;
-import com.fuint.common.dto.UserOrderDto;
-import com.fuint.common.dto.WxCardDto;
+import com.fuint.common.dto.member.WxCardDto;
+import com.fuint.common.dto.order.OrderDto;
+import com.fuint.common.dto.order.UserOrderDto;
 import com.fuint.common.enums.*;
 import com.fuint.common.http.HttpRESTDataClient;
 import com.fuint.common.service.*;
@@ -120,11 +120,10 @@ public class WeixinServiceImpl implements WeixinService {
      * @param merchantId 商户ID
      * @param isMinApp 是否小程序
      * @param useCache 是否读取缓存
-     * @throws BusinessCheckException
      * @return
      * */
     @Override
-    public String getAccessToken(Integer merchantId, boolean isMinApp, boolean useCache) throws BusinessCheckException {
+    public String getAccessToken(Integer merchantId, boolean isMinApp, boolean useCache) {
         String platForm = isMinApp == true ? "minApp" : "mp";
         String wxAppId = env.getProperty("weixin.official.appId");
         String wxAppSecret = env.getProperty("weixin.official.appSecret");

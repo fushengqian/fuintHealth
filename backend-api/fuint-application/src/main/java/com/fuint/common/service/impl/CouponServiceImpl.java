@@ -4,18 +4,19 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fuint.common.Constants;
-import com.fuint.common.dto.CouponDto;
-import com.fuint.common.dto.ReqCouponDto;
-import com.fuint.common.dto.ReqSendLogDto;
+import com.fuint.common.dto.coupon.CouponDto;
+import com.fuint.common.dto.coupon.ReqCouponDto;
+import com.fuint.common.dto.coupon.ReqSendLogDto;
+import com.fuint.common.dto.system.AccountInfo;
 import com.fuint.common.enums.*;
 import com.fuint.common.param.CouponListParam;
+import com.fuint.common.param.CouponPage;
 import com.fuint.common.service.*;
 import com.fuint.common.util.CommonUtil;
 import com.fuint.common.util.DateUtil;
 import com.fuint.common.util.SeqUtil;
 import com.fuint.framework.annoation.OperationServiceLog;
 import com.fuint.framework.exception.BusinessCheckException;
-import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.framework.web.ResponseObject;
 import com.fuint.repository.bean.CouponNumBean;
@@ -116,44 +117,44 @@ public class CouponServiceImpl extends ServiceImpl<MtCouponMapper, MtCoupon> imp
     /**
      * 分页查询券列表
      *
-     * @param paginationRequest
+     * @param couponPage
      * @return
      */
     @Override
-    public PaginationResponse<MtCoupon> queryCouponListByPagination(PaginationRequest paginationRequest) {
-        Page<MtCoupon> pageHelper = PageHelper.startPage(paginationRequest.getCurrentPage(), paginationRequest.getPageSize());
+    public PaginationResponse<MtCoupon> queryCouponListByPagination(CouponPage couponPage) {
+        Page<MtCoupon> pageHelper = PageHelper.startPage(couponPage.getPage(), couponPage.getPageSize());
         LambdaQueryWrapper<MtCoupon> lambdaQueryWrapper = Wrappers.lambdaQuery();
         lambdaQueryWrapper.ne(MtCoupon::getStatus, StatusEnum.DISABLE.getKey());
 
-        String name = paginationRequest.getSearchParams().get("name") == null ? "" : paginationRequest.getSearchParams().get("name").toString();
+        String name = couponPage.getName();
         if (StringUtils.isNotBlank(name)) {
             lambdaQueryWrapper.like(MtCoupon::getName, name);
         }
-        String status = paginationRequest.getSearchParams().get("status") == null ? "" : paginationRequest.getSearchParams().get("status").toString();
+        String status = couponPage.getStatus();
         if (StringUtils.isNotBlank(status)) {
             lambdaQueryWrapper.eq(MtCoupon::getStatus, status);
         }
-        String groupId = paginationRequest.getSearchParams().get("groupId") == null ? "" : paginationRequest.getSearchParams().get("groupId").toString();
-        if (StringUtils.isNotBlank(groupId)) {
+        Integer groupId = couponPage.getGroupId();
+        if (groupId != null) {
             lambdaQueryWrapper.eq(MtCoupon::getGroupId, groupId);
         }
-        String type = paginationRequest.getSearchParams().get("type") == null ? "" : paginationRequest.getSearchParams().get("type").toString();
+        String type = couponPage.getType();
         if (StringUtils.isNotBlank(type)) {
             lambdaQueryWrapper.eq(MtCoupon::getType, type);
         }
-        String merchantId = paginationRequest.getSearchParams().get("merchantId") == null ? "" : paginationRequest.getSearchParams().get("merchantId").toString();
-        if (StringUtils.isNotBlank(merchantId)) {
+        Integer merchantId = couponPage.getMerchantId();
+        if (merchantId != null) {
             lambdaQueryWrapper.eq(MtCoupon::getMerchantId, merchantId);
         }
-        String storeId = paginationRequest.getSearchParams().get("storeId") == null ? "" : paginationRequest.getSearchParams().get("storeId").toString();
-        if (StringUtils.isNotBlank(storeId)) {
+        Integer storeId = couponPage.getStoreId();
+        if (storeId != null) {
             lambdaQueryWrapper.eq(MtCoupon::getStoreId, storeId);
         }
 
         lambdaQueryWrapper.orderByDesc(MtCoupon::getUpdateTime);
         List<MtCoupon> dataList = mtCouponMapper.selectList(lambdaQueryWrapper);
 
-        PageRequest pageRequest = PageRequest.of(paginationRequest.getCurrentPage(), paginationRequest.getPageSize());
+        PageRequest pageRequest = PageRequest.of(couponPage.getPage(), couponPage.getPageSize());
         PageImpl pageImpl = new PageImpl(dataList, pageRequest, pageHelper.getTotal());
         PaginationResponse<MtCoupon> paginationResponse = new PaginationResponse(pageImpl, MtCoupon.class);
         paginationResponse.setTotalPages(pageHelper.getPages());
@@ -630,20 +631,25 @@ public class CouponServiceImpl extends ServiceImpl<MtCouponMapper, MtCoupon> imp
      * @param  num 发放套数
      * @param  sendMessage 是否发送消息
      * @param  uuid 批次号
-     * @param  operator 操作人
+     * @param  accountInfo 操作人
      * @throws BusinessCheckException
      * @return
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     @OperationServiceLog(description = "发放卡券")
-    public ResponseObject sendCoupon(Integer couponId, Integer userId, Integer num, Boolean sendMessage, String uuid, String operator) throws BusinessCheckException {
+    public ResponseObject sendCoupon(Integer couponId, Integer userId, Integer num, Boolean sendMessage, String uuid, AccountInfo accountInfo) throws BusinessCheckException {
         ResponseObject response = new ResponseObject(200, "发放成功", null);
         if (StringUtil.isEmpty(uuid)) {
             uuid = SeqUtil.getUUID();
         }
         MtCoupon couponInfo = queryCouponById(couponId);
         MtUser userInfo = memberService.queryMemberById(userId);
+        if (accountInfo.getMerchantId().equals(userInfo.getMerchantId()) || accountInfo.getMerchantId().equals(couponInfo.getMerchantId())) {
+            response.setMessage("卡券发放有误");
+            response.setCode(201);
+            return response;
+        }
 
         if (null == userInfo || !userInfo.getStatus().equals(StatusEnum.ENABLED.getKey())) {
             response.setMessage("该会员不存在或已禁用，请先注册会员");
@@ -721,7 +727,7 @@ public class CouponServiceImpl extends ServiceImpl<MtCouponMapper, MtCoupon> imp
                 userCoupon.setStoreId(userInfo.getStoreId());
                 userCoupon.setAmount(couponInfo.getAmount());
                 userCoupon.setBalance(couponInfo.getAmount());
-                userCoupon.setOperator(operator);
+                userCoupon.setOperator(accountInfo.getAccountName());
                 userCoupon.setGroupId(couponInfo.getGroupId());
                 userCoupon.setMobile(mobile);
                 userCoupon.setUserId(userInfo.getId());
@@ -758,7 +764,7 @@ public class CouponServiceImpl extends ServiceImpl<MtCouponMapper, MtCoupon> imp
         sendLogDto.setGroupName(mtCouponGroup.getName());
         sendLogDto.setCouponId(couponInfo.getId());
         sendLogDto.setSendNum(num);
-        sendLogDto.setOperator(operator);
+        sendLogDto.setOperator(accountInfo.getAccountName());
         sendLogDto.setUuid(uuid);
         sendLogDto.setMerchantId(couponInfo.getMerchantId());
         sendLogDto.setStoreId(couponInfo.getStoreId());
@@ -800,14 +806,14 @@ public class CouponServiceImpl extends ServiceImpl<MtCouponMapper, MtCoupon> imp
      * @param userIds  会员ID
      * @param num      发放套数
      * @param uuid     批次号
-     * @param operator 操作人
+     * @param accountInfo 操作人
      * @throws BusinessCheckException
      * @return
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     @OperationServiceLog(description = "发放卡券")
-    public Boolean batchSendCoupon(Integer couponId, List<Integer> userIds, Integer num, String uuid, String operator) throws BusinessCheckException {
+    public Boolean batchSendCoupon(Integer couponId, List<Integer> userIds, Integer num, String uuid, AccountInfo accountInfo) throws BusinessCheckException {
        if (userIds == null || userIds.size() < 1) {
            throw new BusinessCheckException("发放对象异常，卡券发放失败");
        }
@@ -815,7 +821,7 @@ public class CouponServiceImpl extends ServiceImpl<MtCouponMapper, MtCoupon> imp
        Boolean sendMsg = userIds.size() >= 10 ? false : true;
        if (userIds != null && userIds.size() > 0) {
            for (Integer userId : userIds) {
-                ResponseObject result = sendCoupon(couponId, userId, num, sendMsg, uuid, operator);
+                ResponseObject result = sendCoupon(couponId, userId, num, sendMsg, uuid, accountInfo);
                 if (result.getCode() != 200) {
                     throw new BusinessCheckException("发放卡券失败：" + result.getMessage());
                 }
@@ -1081,16 +1087,16 @@ public class CouponServiceImpl extends ServiceImpl<MtCouponMapper, MtCoupon> imp
     /**
      * 根据券ID 撤销卡券核销
      *
-     * @param id             核销流水ID
-     * @param userCouponId   用户卡券ID
-     * @param operator       操作人
+     * @param  id 核销流水ID
+     * @param  userCouponId 用户卡券ID
+     * @param  accountInfo 操作人
      * @throws BusinessCheckException
      * @return
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     @OperationServiceLog(description = "撤销卡券核销")
-    public void rollbackUserCoupon(Integer id, Integer userCouponId,String operator) throws BusinessCheckException {
+    public void rollbackUserCoupon(Integer id, Integer userCouponId, AccountInfo accountInfo) throws BusinessCheckException {
         MtConfirmLog mtConfirmLog = mtConfirmLogMapper.selectById(id);
         MtUserCoupon userCoupon = mtUserCouponMapper.selectById(userCouponId);
 
@@ -1100,6 +1106,9 @@ public class CouponServiceImpl extends ServiceImpl<MtCouponMapper, MtCoupon> imp
 
         if (null == userCoupon) {
             throw new BusinessCheckException("用户卡券不存在");
+        }
+        if (accountInfo.getMerchantId() > 0 && !accountInfo.getMerchantId().equals(mtConfirmLog.getMerchantId())) {
+            throw new BusinessCheckException("不同商户，没有操作权限");
         }
 
         // 卡券未过期才能撤销,当前时间小于过期日期才能删除,48小时
@@ -1145,7 +1154,7 @@ public class CouponServiceImpl extends ServiceImpl<MtCouponMapper, MtCoupon> imp
         mtUserCouponMapper.updateById(userCoupon);
 
         // 更新流水
-        mtConfirmLog.setOperator(operator);
+        mtConfirmLog.setOperator(accountInfo.getAccountName());
         mtConfirmLog.setStatus(StatusEnum.DISABLE.getKey());
         mtConfirmLog.setUpdateTime(new Date());
         mtConfirmLog.setCancelTime(new Date());

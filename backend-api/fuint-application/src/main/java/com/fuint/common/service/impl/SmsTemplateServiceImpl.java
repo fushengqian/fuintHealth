@@ -3,12 +3,13 @@ package com.fuint.common.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fuint.common.dto.SmsTemplateDto;
+import com.fuint.common.dto.message.SmsTemplateDto;
+import com.fuint.common.dto.system.AccountInfo;
 import com.fuint.common.enums.StatusEnum;
+import com.fuint.common.param.SmsTemplatePage;
 import com.fuint.common.service.SmsTemplateService;
 import com.fuint.framework.annoation.OperationServiceLog;
 import com.fuint.framework.exception.BusinessCheckException;
-import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.repository.mapper.MtSmsTemplateMapper;
 import com.fuint.repository.model.MtSmsTemplate;
@@ -21,6 +22,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -41,32 +43,32 @@ public class SmsTemplateServiceImpl extends ServiceImpl<MtSmsTemplateMapper, MtS
     /**
      * 分页查询模板列表
      *
-     * @param paginationRequest
+     * @param smsTemplatePage
      * @return
      */
     @Override
-    public PaginationResponse<MtSmsTemplate> querySmsTemplateListByPagination(PaginationRequest paginationRequest) {
-        Page<MtSmsTemplate> pageHelper = PageHelper.startPage(paginationRequest.getCurrentPage(), paginationRequest.getPageSize());
+    public PaginationResponse<MtSmsTemplate> querySmsTemplateListByPagination(SmsTemplatePage smsTemplatePage) {
+        Page<MtSmsTemplate> pageHelper = PageHelper.startPage(smsTemplatePage.getPage(), smsTemplatePage.getPageSize());
         LambdaQueryWrapper<MtSmsTemplate> lambdaQueryWrapper = Wrappers.lambdaQuery();
         lambdaQueryWrapper.ne(MtSmsTemplate::getStatus, StatusEnum.DISABLE.getKey());
 
-        String merchantId = paginationRequest.getSearchParams().get("merchantId") == null ? "" : paginationRequest.getSearchParams().get("merchantId").toString();
-        if (StringUtils.isNotBlank(merchantId)) {
-            lambdaQueryWrapper.like(MtSmsTemplate::getMerchantId, merchantId);
+        Integer merchantId = smsTemplatePage.getMerchantId();
+        if (merchantId != null) {
+            lambdaQueryWrapper.eq(MtSmsTemplate::getMerchantId, merchantId);
         }
-        String name = paginationRequest.getSearchParams().get("name") == null ? "" : paginationRequest.getSearchParams().get("name").toString();
+        String name = smsTemplatePage.getName();
         if (StringUtils.isNotBlank(name)) {
             lambdaQueryWrapper.like(MtSmsTemplate::getName, name);
         }
-        String uname = paginationRequest.getSearchParams().get("uname") == null ? "" : paginationRequest.getSearchParams().get("uname").toString();
+        String uname = smsTemplatePage.getUname();
         if (StringUtils.isNotBlank(uname)) {
             lambdaQueryWrapper.eq(MtSmsTemplate::getUname, uname);
         }
-        String code = paginationRequest.getSearchParams().get("code") == null ? "" : paginationRequest.getSearchParams().get("code").toString();
+        String code = smsTemplatePage.getCode();
         if (StringUtils.isNotBlank(code)) {
             lambdaQueryWrapper.eq(MtSmsTemplate::getCode, code);
         }
-        String status = paginationRequest.getSearchParams().get("status") == null ? "" : paginationRequest.getSearchParams().get("status").toString();
+        String status = smsTemplatePage.getStatus();
         if (StringUtils.isNotBlank(status)) {
             lambdaQueryWrapper.eq(MtSmsTemplate::getStatus, status);
         }
@@ -74,7 +76,7 @@ public class SmsTemplateServiceImpl extends ServiceImpl<MtSmsTemplateMapper, MtS
         lambdaQueryWrapper.orderByDesc(MtSmsTemplate::getId);
         List<MtSmsTemplate> dataList = mtSmsTemplateMapper.selectList(lambdaQueryWrapper);
 
-        PageRequest pageRequest = PageRequest.of(paginationRequest.getCurrentPage(), paginationRequest.getPageSize());
+        PageRequest pageRequest = PageRequest.of(smsTemplatePage.getPage(), smsTemplatePage.getPageSize());
         PageImpl pageImpl = new PageImpl(dataList, pageRequest, pageHelper.getTotal());
         PaginationResponse<MtSmsTemplate> paginationResponse = new PaginationResponse(pageImpl, MtSmsTemplate.class);
         paginationResponse.setTotalPages(pageHelper.getPages());
@@ -88,12 +90,13 @@ public class SmsTemplateServiceImpl extends ServiceImpl<MtSmsTemplateMapper, MtS
      * 保存模板信息
      *
      * @param mtSmsTemplateDto 短信模板
+     * @param accountInfo 登录账号信息
      * @return
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     @OperationServiceLog(description = "保存短信模板")
-    public MtSmsTemplate saveSmsTemplate(SmsTemplateDto mtSmsTemplateDto) throws BusinessCheckException {
+    public MtSmsTemplate saveSmsTemplate(SmsTemplateDto mtSmsTemplateDto,  AccountInfo accountInfo) throws BusinessCheckException {
         MtSmsTemplate mtSmsTemplate = new MtSmsTemplate();
         mtSmsTemplate.setMerchantId(mtSmsTemplateDto.getMerchantId());
         mtSmsTemplate.setCode(mtSmsTemplateDto.getCode());
@@ -101,7 +104,7 @@ public class SmsTemplateServiceImpl extends ServiceImpl<MtSmsTemplateMapper, MtS
         mtSmsTemplate.setUname(mtSmsTemplateDto.getUname());
         mtSmsTemplate.setContent(mtSmsTemplateDto.getContent());
         mtSmsTemplate.setStatus(mtSmsTemplateDto.getStatus());
-        mtSmsTemplate.setOperator(mtSmsTemplate.getOperator());
+        mtSmsTemplate.setOperator(accountInfo.getAccountName());
 
         if (mtSmsTemplateDto.getId() == null) {
             mtSmsTemplate.setCreateTime(new Date());
@@ -111,6 +114,9 @@ public class SmsTemplateServiceImpl extends ServiceImpl<MtSmsTemplateMapper, MtS
             MtSmsTemplate oldSmsTemplate = getById(mtSmsTemplateDto.getId());
             if (oldSmsTemplate == null) {
                 throw new BusinessCheckException("该短信模板不存在");
+            }
+            if (!oldSmsTemplate.getMerchantId().equals(accountInfo.getMerchantId())) {
+                throw new BusinessCheckException("无操作权限");
             }
             mtSmsTemplate.setMerchantId(oldSmsTemplate.getMerchantId());
             mtSmsTemplate.setId(mtSmsTemplateDto.getId());
@@ -125,15 +131,18 @@ public class SmsTemplateServiceImpl extends ServiceImpl<MtSmsTemplateMapper, MtS
      * 根据ID删除数据
      *
      * @param id 模板ID
-     * @param operator 操作人
+     * @param accountInfo 操作人
      * @return
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     @OperationServiceLog(description = "删除短信模板")
-    public void deleteTemplate(Integer id, String operator) {
+    public void deleteTemplate(Integer id, AccountInfo accountInfo) {
         MtSmsTemplate mtTemplate = mtSmsTemplateMapper.selectById(id);
         if (null == mtTemplate) {
+            return;
+        }
+        if (!mtTemplate.getMerchantId().equals(accountInfo.getMerchantId())) {
             return;
         }
 

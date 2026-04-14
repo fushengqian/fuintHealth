@@ -3,8 +3,8 @@ package com.fuint.common.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fuint.common.dto.AccountDto;
-import com.fuint.common.dto.AccountInfo;
+import com.fuint.common.dto.system.AccountDto;
+import com.fuint.common.dto.system.AccountInfo;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.param.AccountPage;
 import com.fuint.common.service.AccountService;
@@ -113,20 +113,20 @@ public class AccountServiceImpl extends ServiceImpl<TAccountMapper, TAccount> im
         List<AccountDto> dataList = new ArrayList<>();
 
         for (TAccount tAccount : accountList) {
-            AccountDto accountDto = new AccountDto();
-            BeanUtils.copyProperties(tAccount, accountDto);
-            accountDto.setId(tAccount.getAcctId());
-            MtMerchant mtMerchant = mtMerchantMapper.selectById(tAccount.getMerchantId());
-            if (mtMerchant != null) {
-                accountDto.setMerchantName(mtMerchant.getName());
-            }
-            MtStore mtStore = mtStoreMapper.selectById(tAccount.getStoreId());
-            if (mtStore != null) {
-                accountDto.setStoreName(mtStore.getName());
-            }
-            accountDto.setSalt(null);
-            accountDto.setPassword(null);
-            dataList.add(accountDto);
+             AccountDto accountDto = new AccountDto();
+             BeanUtils.copyProperties(tAccount, accountDto);
+             accountDto.setId(tAccount.getAcctId());
+             MtMerchant mtMerchant = mtMerchantMapper.selectById(tAccount.getMerchantId());
+             if (mtMerchant != null) {
+                 accountDto.setMerchantName(mtMerchant.getName());
+             }
+             MtStore mtStore = mtStoreMapper.selectById(tAccount.getStoreId());
+             if (mtStore != null) {
+                 accountDto.setStoreName(mtStore.getName());
+             }
+             accountDto.setSalt(null);
+             accountDto.setPassword(null);
+             dataList.add(accountDto);
         }
 
         PageRequest pageRequest = PageRequest.of(accountPage.getPage(), accountPage.getPageSize());
@@ -256,7 +256,6 @@ public class AccountServiceImpl extends ServiceImpl<TAccountMapper, TAccount> im
      *
      * @param  tAccount 账户实体
      * @throws BusinessCheckException
-     * @return
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -302,7 +301,6 @@ public class AccountServiceImpl extends ServiceImpl<TAccountMapper, TAccount> im
      * 更新账户
      *
      * @param tAccount
-     * @return
      */
     @Override
     @Transactional(rollbackFor = Exception.class)

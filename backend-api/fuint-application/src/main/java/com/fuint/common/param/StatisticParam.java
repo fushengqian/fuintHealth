@@ -24,4 +24,3 @@ public class StatisticParam extends PageParam implements Serializable {
     private List<Integer> storeIds;
 
 }
-

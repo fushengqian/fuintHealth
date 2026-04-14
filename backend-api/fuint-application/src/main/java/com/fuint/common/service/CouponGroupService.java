@@ -1,9 +1,10 @@
 package com.fuint.common.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.fuint.common.dto.ReqCouponGroupDto;
+import com.fuint.common.dto.coupon.ReqCouponGroupDto;
+import com.fuint.common.dto.system.AccountInfo;
+import com.fuint.common.param.CouponGroupPage;
 import com.fuint.framework.exception.BusinessCheckException;
-import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.repository.model.MtCouponGroup;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,10 +21,10 @@ public interface CouponGroupService extends IService<MtCouponGroup> {
     /**
      * 分页查询分组列表
      *
-     * @param paginationRequest
+     * @param couponGroupPage
      * @return
      */
-    PaginationResponse<MtCouponGroup> queryCouponGroupListByPagination(PaginationRequest paginationRequest);
+    PaginationResponse<MtCouponGroup> queryCouponGroupListByPagination(CouponGroupPage couponGroupPage);
 
     /**
      * 添加卡券分组
@@ -87,8 +88,9 @@ public interface CouponGroupService extends IService<MtCouponGroup> {
      * 导入发券列表
      *
      * @param file excel文件
-     * @param operator 操作者
+     * @param accountInfo 操作者
+     * @return
      * */
-    String importSendCoupon(MultipartFile file, String operator, String filePath) throws BusinessCheckException;
+    String importSendCoupon(MultipartFile file, AccountInfo accountInfo, String filePath) throws BusinessCheckException;
 
 }

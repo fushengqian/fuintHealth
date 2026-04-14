@@ -3,16 +3,20 @@ package com.fuint.common.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fuint.common.Constants;
-import com.fuint.common.dto.*;
+import com.fuint.common.dto.order.AddressDto;
+import com.fuint.common.dto.order.OrderDto;
+import com.fuint.common.dto.order.RefundDto;
+import com.fuint.common.dto.order.UserOrderDto;
+import com.fuint.common.dto.system.AccountInfo;
 import com.fuint.common.enums.*;
+import com.fuint.common.param.RefundPage;
 import com.fuint.common.service.*;
 import com.fuint.common.util.DateUtil;
 import com.fuint.framework.annoation.OperationServiceLog;
 import com.fuint.framework.exception.BusinessCheckException;
-import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.framework.web.ResponseObject;
+import com.fuint.module.clientApi.request.RefundListRequest;
 import com.fuint.repository.mapper.*;
 import com.fuint.repository.model.*;
 import com.fuint.utils.StringUtil;
@@ -28,6 +32,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.math.BigDecimal;
 import java.util.*;
 
@@ -100,40 +105,40 @@ public class RefundServiceImpl extends ServiceImpl<MtRefundMapper, MtRefund> imp
     /**
      * 分页查询售后订单列表
      *
-     * @param paginationRequest
+     * @param refundPage
      * @return
      */
     @Override
-    public PaginationResponse<RefundDto> getRefundListByPagination(PaginationRequest paginationRequest) {
-        Page<MtBanner> pageHelper = PageHelper.startPage(paginationRequest.getCurrentPage(), paginationRequest.getPageSize());
+    public PaginationResponse<RefundDto> getRefundListByPagination(RefundPage refundPage) {
+        Page<MtBanner> pageHelper = PageHelper.startPage(refundPage.getPage(), refundPage.getPageSize());
         LambdaQueryWrapper<MtRefund> lambdaQueryWrapper = Wrappers.lambdaQuery();
         lambdaQueryWrapper.ne(MtRefund::getStatus, StatusEnum.DISABLE.getKey());
-        String merchantId = paginationRequest.getSearchParams().get("merchantId") == null ? "" : paginationRequest.getSearchParams().get("merchantId").toString();
-        if (StringUtils.isNotBlank(merchantId)) {
+        Integer merchantId = refundPage.getMerchantId();
+        if (merchantId != null) {
             lambdaQueryWrapper.eq(MtRefund::getMerchantId, merchantId);
         }
-        String remark = paginationRequest.getSearchParams().get("remark") == null ? "" : paginationRequest.getSearchParams().get("remark").toString();
+        String remark = refundPage.getRemark();
         if (StringUtils.isNotBlank(remark)) {
             lambdaQueryWrapper.like(MtRefund::getRemark, remark);
         }
-        String status = paginationRequest.getSearchParams().get("status") == null ? "" : paginationRequest.getSearchParams().get("status").toString();
+        String status = refundPage.getStatus();
         if (StringUtils.isNotBlank(status)) {
             lambdaQueryWrapper.eq(MtRefund::getStatus, status);
         }
-        String orderId = paginationRequest.getSearchParams().get("orderId") == null ? "" : paginationRequest.getSearchParams().get("orderId").toString();
-        if (StringUtils.isNotBlank(orderId)) {
+        Integer orderId = refundPage.getOrderId();
+        if (orderId != null) {
             lambdaQueryWrapper.eq(MtRefund::getOrderId, orderId);
         }
-        String userId = paginationRequest.getSearchParams().get("userId") == null ? "" : paginationRequest.getSearchParams().get("userId").toString();
-        if (StringUtils.isNotBlank(userId) && Integer.parseInt(userId) > 0) {
+        Integer userId = refundPage.getUserId();
+        if (userId != null && userId > 0) {
             lambdaQueryWrapper.eq(MtRefund::getUserId, userId);
         }
-        String storeId = paginationRequest.getSearchParams().get("storeId") == null ? "" : paginationRequest.getSearchParams().get("storeId").toString();
-        if (StringUtils.isNotBlank(storeId)) {
+        Integer storeId = refundPage.getStoreId();
+        if (storeId != null) {
             lambdaQueryWrapper.eq(MtRefund::getStoreId, storeId);
         }
-        String startTime = paginationRequest.getSearchParams().get("startTime") == null ? "" : paginationRequest.getSearchParams().get("startTime").toString();
-        String endTime = paginationRequest.getSearchParams().get("endTime") == null ? "" : paginationRequest.getSearchParams().get("endTime").toString();
+        String startTime = refundPage.getStartTime();
+        String endTime = refundPage.getEndTime();
         if (StringUtil.isNotEmpty(startTime)) {
             lambdaQueryWrapper.ge(MtRefund::getCreateTime, startTime);
         }
@@ -160,7 +165,7 @@ public class RefundServiceImpl extends ServiceImpl<MtRefundMapper, MtRefund> imp
                  dataList.add(refundDto);
             }
         }
-        PageRequest pageRequest = PageRequest.of(paginationRequest.getCurrentPage(), paginationRequest.getPageSize());
+        PageRequest pageRequest = PageRequest.of(refundPage.getPage(), refundPage.getPageSize());
         PageImpl pageImpl = new PageImpl(dataList, pageRequest, pageHelper.getTotal());
         PaginationResponse<RefundDto> paginationResponse = new PaginationResponse(pageImpl, RefundDto.class);
         paginationResponse.setTotalPages(pageHelper.getPages());
@@ -173,25 +178,45 @@ public class RefundServiceImpl extends ServiceImpl<MtRefundMapper, MtRefund> imp
     /**
      * 获取用户售后订单列表
      *
-     * @param  paramMap 查询参数
+     * @param  param 查询参数
      * @return
      * */
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public ResponseObject getUserRefundList(Map<String, Object> paramMap) {
-        Integer pageNumber = paramMap.get("pageNumber") == null ? Constants.PAGE_NUMBER : Integer.parseInt(paramMap.get("pageNumber").toString());
-        Integer pageSize = paramMap.get("pageSize") == null ? Constants.PAGE_SIZE : Integer.parseInt(paramMap.get("pageSize").toString());
-        String userId = paramMap.get("userId") == null ? "0" : paramMap.get("userId").toString();
-        String status =  paramMap.get("status") == null ? "": paramMap.get("status").toString();
-
-        Page<MtBanner> pageHelper = PageHelper.startPage(pageNumber, pageSize);
+    public ResponseObject getUserRefundList(RefundListRequest param) {
+        Page<MtBanner> pageHelper = PageHelper.startPage(param.getPage(), param.getPageSize());
         LambdaQueryWrapper<MtRefund> lambdaQueryWrapper = Wrappers.lambdaQuery();
 
-        if (StringUtils.isNotBlank(userId)) {
-            lambdaQueryWrapper.like(MtRefund::getUserId, userId);
+        Integer merchantId = param.getMerchantId();
+        if (merchantId != null && merchantId > 0) {
+            lambdaQueryWrapper.like(MtRefund::getMerchantId, merchantId);
         }
+
+        Integer storeId = param.getStoreId();
+        if (storeId != null && storeId > 0) {
+            lambdaQueryWrapper.eq(MtRefund::getStoreId, storeId);
+        }
+
+        Integer userId = param.getUserId();
+        if (userId != null && userId > 0) {
+            lambdaQueryWrapper.eq(MtRefund::getUserId, userId);
+        }
+
+        String status = param.getStatus();
         if (StringUtils.isNotBlank(status)) {
             lambdaQueryWrapper.eq(MtRefund::getStatus, status);
+        }
+
+        String keyword = param.getKeyword();
+        if (StringUtils.isNotBlank(keyword)) {
+            MtUser userInfo = memberService.queryMemberByMobile(merchantId, keyword);
+            MtOrder orderInfo = orderService.getOrderInfoByOrderSn(keyword);
+            if (userInfo != null) {
+                lambdaQueryWrapper.eq(MtRefund::getUserId, userInfo.getId());
+            } else if (orderInfo != null) {
+                lambdaQueryWrapper.eq(MtRefund::getOrderId, orderInfo.getId());
+            } else {
+                lambdaQueryWrapper.eq(MtRefund::getOrderId, -1);
+            }
         }
 
         lambdaQueryWrapper.orderByDesc(MtRefund::getId);
@@ -230,7 +255,7 @@ public class RefundServiceImpl extends ServiceImpl<MtRefundMapper, MtRefund> imp
             }
         }
 
-        PageRequest pageRequest = PageRequest.of(pageNumber, pageSize);
+        PageRequest pageRequest = PageRequest.of(param.getPage(), param.getPageSize());
         PageImpl pageImpl = new PageImpl(dataList, pageRequest, pageHelper.getTotal());
         PaginationResponse<RefundDto> paginationResponse = new PaginationResponse(pageImpl, RefundDto.class);
         paginationResponse.setTotalPages(pageHelper.getPages());
@@ -349,10 +374,14 @@ public class RefundServiceImpl extends ServiceImpl<MtRefundMapper, MtRefund> imp
     @Override
     @Transactional(rollbackFor = Exception.class)
     @OperationServiceLog(description = "更新售后订单")
-    public MtRefund updateRefund(RefundDto refundDto) throws BusinessCheckException {
+    public MtRefund updateRefund(RefundDto refundDto, AccountInfo accountInfo) throws BusinessCheckException {
         MtRefund mtRefund = mtRefundMapper.selectById(refundDto.getId());
         if (mtRefund == null) {
             throw new BusinessCheckException("该售后订单状态异常");
+        }
+
+        if (accountInfo.getMerchantId() > 0 && !accountInfo.getMerchantId().equals(mtRefund.getMerchantId())) {
+            throw new BusinessCheckException("不同商户，没有操作权限");
         }
 
         // 已同意的不能再设置为已拒绝
@@ -389,17 +418,21 @@ public class RefundServiceImpl extends ServiceImpl<MtRefundMapper, MtRefund> imp
     /**
      * 同意售后订单
      *
-     * @param refundDto
+     * @param  refundDto
      * @throws BusinessCheckException
      * @return
      * */
     @Override
     @Transactional(rollbackFor = Exception.class)
     @OperationServiceLog(description = "同意售后订单")
-    public MtRefund agreeRefund(RefundDto refundDto) throws BusinessCheckException {
+    public MtRefund agreeRefund(RefundDto refundDto, AccountInfo accountInfo) throws BusinessCheckException {
         MtRefund refund = mtRefundMapper.selectById(refundDto.getId());
         if (null == refund) {
             throw new BusinessCheckException("该售后订单状态异常");
+        }
+
+        if (accountInfo.getMerchantId() > 0 && !accountInfo.getMerchantId().equals(refund.getMerchantId())) {
+            throw new BusinessCheckException("不同商户，没有操作权限");
         }
 
         // 已经同意过了
@@ -636,7 +669,7 @@ public class RefundServiceImpl extends ServiceImpl<MtRefundMapper, MtRefund> imp
             agreeDto.setId(mtRefund.getId());
             agreeDto.setOperator(accountInfo.getAccountName());
             agreeDto.setStatus(RefundStatusEnum.COMPLETE.getKey());
-            MtRefund refundInfo = agreeRefund(agreeDto);
+            MtRefund refundInfo = agreeRefund(agreeDto, accountInfo);
             if (refundInfo == null) {
                 logger.error("退款审核失败，orderId = " + orderId + ", refundId = " + mtRefund.getId());
                 throw new BusinessCheckException("退款审核失败！");

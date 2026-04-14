@@ -3,13 +3,15 @@ package com.fuint.common.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fuint.common.dto.MerchantDto;
-import com.fuint.common.dto.MerchantSettingDto;
-import com.fuint.common.dto.StoreDto;
+import com.fuint.common.dto.merchant.MerchantDto;
+import com.fuint.common.dto.merchant.MerchantSettingDto;
+import com.fuint.common.dto.merchant.StoreDto;
+import com.fuint.common.dto.system.AccountInfo;
 import com.fuint.common.enums.OrderSettingEnum;
 import com.fuint.common.enums.SettingTypeEnum;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.enums.YesOrNoEnum;
+import com.fuint.common.param.MerchantPage;
 import com.fuint.common.service.MerchantService;
 import com.fuint.common.service.SettingService;
 import com.fuint.common.service.StoreService;
@@ -17,7 +19,6 @@ import com.fuint.common.util.CommonUtil;
 import com.fuint.common.util.RegexUtil;
 import com.fuint.framework.annoation.OperationServiceLog;
 import com.fuint.framework.exception.BusinessCheckException;
-import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.module.merchantApi.request.MerchantSettingParam;
 import com.fuint.repository.mapper.MtGoodsMapper;
@@ -73,24 +74,24 @@ public class MerchantServiceImpl extends ServiceImpl<MtMerchantMapper, MtMerchan
     /**
      * 分页查询商户列表
      *
-     * @param  paginationRequest
+     * @param  merchantPage
      * @return
      */
     @Override
-    public PaginationResponse<MerchantDto> queryMerchantListByPagination(PaginationRequest paginationRequest) {
-        Page<MtMerchant> pageHelper = PageHelper.startPage(paginationRequest.getCurrentPage(), paginationRequest.getPageSize());
+    public PaginationResponse<MerchantDto> queryMerchantListByPagination(MerchantPage merchantPage) {
+        Page<MtMerchant> pageHelper = PageHelper.startPage(merchantPage.getPage(), merchantPage.getPageSize());
         LambdaQueryWrapper<MtMerchant> lambdaQueryWrapper = Wrappers.lambdaQuery();
         lambdaQueryWrapper.ne(MtMerchant::getStatus, StatusEnum.DISABLE.getKey());
 
-        String name = paginationRequest.getSearchParams().get("name") == null ? "" : paginationRequest.getSearchParams().get("name").toString();
+        String name = merchantPage.getName();
         if (StringUtils.isNotBlank(name)) {
             lambdaQueryWrapper.like(MtMerchant::getName, name);
         }
-        String status = paginationRequest.getSearchParams().get("status") == null ? "" : paginationRequest.getSearchParams().get("status").toString();
+        String status = merchantPage.getStatus();
         if (StringUtils.isNotBlank(status)) {
             lambdaQueryWrapper.eq(MtMerchant::getStatus, status);
         }
-        String id = paginationRequest.getSearchParams().get("id") == null ? "" : paginationRequest.getSearchParams().get("id").toString();
+        String id = merchantPage.getId();
         if (StringUtils.isNotBlank(id)) {
             lambdaQueryWrapper.eq(MtMerchant::getId, id);
         }
@@ -107,7 +108,7 @@ public class MerchantServiceImpl extends ServiceImpl<MtMerchantMapper, MtMerchan
             }
         }
 
-        PageRequest pageRequest = PageRequest.of(paginationRequest.getCurrentPage(), paginationRequest.getPageSize());
+        PageRequest pageRequest = PageRequest.of(merchantPage.getPage(), merchantPage.getPageSize());
         PageImpl pageImpl = new PageImpl(dataList, pageRequest, pageHelper.getTotal());
         PaginationResponse<MerchantDto> paginationResponse = new PaginationResponse(pageImpl, MtMerchant.class);
         paginationResponse.setTotalPages(pageHelper.getPages());
@@ -396,12 +397,13 @@ public class MerchantServiceImpl extends ServiceImpl<MtMerchantMapper, MtMerchan
      * 保存商户设置信息
      *
      * @param params 商户设置项
+     * @param accountInfo 登录用户
      * @return
      * */
     @Override
     @Transactional(rollbackFor = Exception.class)
     @OperationServiceLog(description = "保存商户设置信息")
-    public MerchantSettingDto saveMerchantSetting(MerchantSettingParam params) throws BusinessCheckException {
+    public MerchantSettingDto saveMerchantSetting(MerchantSettingParam params, AccountInfo accountInfo) throws BusinessCheckException {
         if (params.getStoreId() != null && params.getStoreId() > 0) {
             MtStore storeInfo = storeService.queryStoreById(params.getStoreId());
             if (storeInfo != null) {
@@ -411,7 +413,7 @@ public class MerchantServiceImpl extends ServiceImpl<MtMerchantMapper, MtMerchan
                 storeDto.setContact(params.getContact());
                 storeDto.setPhone(params.getPhone());
                 storeDto.setLogo(params.getLogo());
-                storeService.saveStore(storeDto);
+                storeService.saveStore(storeDto, accountInfo);
             }
         } else {
             MtMerchant merchantInfo = getById(params.getMerchantId());

@@ -1,9 +1,9 @@
 package com.fuint.module.backendApi.controller.report;
 
-import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.dto.report.DailyCashierReportDto;
 import com.fuint.common.dto.report.DailyCateReportDto;
 import com.fuint.common.dto.report.DailySalesReportDto;
+import com.fuint.common.dto.system.AccountInfo;
 import com.fuint.common.param.StatisticParam;
 import com.fuint.common.service.ReportService;
 import com.fuint.common.util.TokenUtil;

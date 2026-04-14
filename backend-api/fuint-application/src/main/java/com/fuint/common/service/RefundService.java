@@ -1,12 +1,13 @@
 package com.fuint.common.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.fuint.common.dto.AccountInfo;
-import com.fuint.common.dto.RefundDto;
+import com.fuint.common.dto.order.RefundDto;
+import com.fuint.common.dto.system.AccountInfo;
+import com.fuint.common.param.RefundPage;
 import com.fuint.framework.exception.BusinessCheckException;
-import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.framework.web.ResponseObject;
+import com.fuint.module.clientApi.request.RefundListRequest;
 import com.fuint.repository.model.MtRefund;
 
 import java.util.Date;
@@ -23,17 +24,18 @@ public interface RefundService extends IService<MtRefund> {
     /**
      * 分页查询列表
      *
-     * @param paginationRequest
+     * @param refundPage
      * @return
      */
-    PaginationResponse<RefundDto> getRefundListByPagination(PaginationRequest paginationRequest);
+    PaginationResponse<RefundDto> getRefundListByPagination(RefundPage refundPage);
 
     /**
-     * 获取用户的售后订单
-     * @param paramMap 查询参数
+     * 获取用户售后订单
+     *
+     * @param param 查询参数
      * @return
      * */
-    ResponseObject getUserRefundList(Map<String, Object> paramMap);
+    ResponseObject getUserRefundList(RefundListRequest param);
 
     /**
      * 创建售后订单
@@ -62,16 +64,17 @@ public interface RefundService extends IService<MtRefund> {
     /**
      * 更新售后订单
      * @param  reqDto
+     * @param  accountInfo
      * @throws BusinessCheckException
      * */
-    MtRefund updateRefund(RefundDto reqDto) throws BusinessCheckException;
+    MtRefund updateRefund(RefundDto reqDto, AccountInfo accountInfo) throws BusinessCheckException;
 
     /**
      * 同意售后订单
      * @param  reqDto
      * @throws BusinessCheckException
      * */
-    MtRefund agreeRefund(RefundDto reqDto) throws BusinessCheckException;
+    MtRefund agreeRefund(RefundDto reqDto, AccountInfo accountInfo) throws BusinessCheckException;
 
     /**
      * 发起退款

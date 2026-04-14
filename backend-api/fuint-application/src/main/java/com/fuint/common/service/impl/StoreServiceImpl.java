@@ -6,18 +6,19 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fuint.common.dto.StoreDto;
-import com.fuint.common.dto.StoreInfo;
+import com.fuint.common.dto.merchant.StoreDto;
+import com.fuint.common.dto.merchant.StoreInfo;
+import com.fuint.common.dto.system.AccountInfo;
 import com.fuint.common.enums.QrCodeEnum;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.enums.YesOrNoEnum;
+import com.fuint.common.param.StorePage;
 import com.fuint.common.service.MerchantService;
 import com.fuint.common.service.StoreService;
 import com.fuint.common.service.WeixinService;
 import com.fuint.common.util.CommonUtil;
 import com.fuint.framework.annoation.OperationServiceLog;
 import com.fuint.framework.exception.BusinessCheckException;
-import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.repository.bean.StoreDistanceBean;
 import com.fuint.repository.mapper.MtMerchantMapper;
@@ -87,29 +88,29 @@ public class StoreServiceImpl extends ServiceImpl<MtStoreMapper, MtStore> implem
     /**
      * 分页查询店铺列表
      *
-     * @param paginationRequest
+     * @param storePage
      * @return
      */
     @Override
-    public PaginationResponse<StoreDto> queryStoreListByPagination(PaginationRequest paginationRequest) {
-        Page<MtStore> pageHelper = PageHelper.startPage(paginationRequest.getCurrentPage(), paginationRequest.getPageSize());
+    public PaginationResponse<StoreDto> queryStoreListByPagination(StorePage storePage) {
+        Page<MtStore> pageHelper = PageHelper.startPage(storePage.getPage(), storePage.getPageSize());
         LambdaQueryWrapper<MtStore> lambdaQueryWrapper = Wrappers.lambdaQuery();
         lambdaQueryWrapper.ne(MtStore::getStatus, StatusEnum.DISABLE.getKey());
 
-        String name = paginationRequest.getSearchParams().get("name") == null ? "" : paginationRequest.getSearchParams().get("name").toString();
+        String name = storePage.getName();
         if (StringUtils.isNotBlank(name)) {
             lambdaQueryWrapper.like(MtStore::getName, name);
         }
-        String status = paginationRequest.getSearchParams().get("status") == null ? "" : paginationRequest.getSearchParams().get("status").toString();
+        String status = storePage.getStatus();
         if (StringUtils.isNotBlank(status)) {
             lambdaQueryWrapper.eq(MtStore::getStatus, status);
         }
-        String merchantId = paginationRequest.getSearchParams().get("merchantId") == null ? "" : paginationRequest.getSearchParams().get("merchantId").toString();
-        if (StringUtils.isNotBlank(merchantId)) {
+        Integer merchantId = storePage.getMerchantId();
+        if (merchantId != null) {
             lambdaQueryWrapper.eq(MtStore::getMerchantId, merchantId);
         }
-        String storeId = paginationRequest.getSearchParams().get("storeId") == null ? "" : paginationRequest.getSearchParams().get("storeId").toString();
-        if (StringUtils.isNotBlank(storeId)) {
+        Integer storeId = storePage.getStoreId();
+        if (storeId != null) {
             lambdaQueryWrapper.eq(MtStore::getId, storeId);
         }
 
@@ -128,7 +129,7 @@ public class StoreServiceImpl extends ServiceImpl<MtStoreMapper, MtStore> implem
              dataList.add(storeDto);
         }
 
-        PageRequest pageRequest = PageRequest.of(paginationRequest.getCurrentPage(), paginationRequest.getPageSize());
+        PageRequest pageRequest = PageRequest.of(storePage.getPage(), storePage.getPageSize());
         PageImpl pageImpl = new PageImpl(dataList, pageRequest, pageHelper.getTotal());
         PaginationResponse<StoreDto> paginationResponse = new PaginationResponse(pageImpl, StoreDto.class);
         paginationResponse.setTotalPages(pageHelper.getPages());
@@ -142,13 +143,14 @@ public class StoreServiceImpl extends ServiceImpl<MtStoreMapper, MtStore> implem
      * 保存店铺信息
      *
      * @param  storeDto 店铺信息
+     * @param  accountInfo 操作人
      * @throws BusinessCheckException
      * @return
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     @OperationServiceLog(description = "保存店铺信息")
-    public MtStore saveStore(StoreDto storeDto) throws BusinessCheckException {
+    public MtStore saveStore(StoreDto storeDto, AccountInfo accountInfo) throws BusinessCheckException {
         MtStore mtStore = new MtStore();
 
         // 编辑店铺
@@ -156,6 +158,9 @@ public class StoreServiceImpl extends ServiceImpl<MtStoreMapper, MtStore> implem
             mtStore = queryStoreById(storeDto.getId());
             if (mtStore == null) {
                 throw new BusinessCheckException("该店铺不存在");
+            }
+            if (mtStore.getMerchantId().equals(accountInfo.getMerchantId())) {
+                throw new BusinessCheckException("无权限操作");
             }
         }
 
@@ -338,7 +343,7 @@ public class StoreServiceImpl extends ServiceImpl<MtStoreMapper, MtStore> implem
      * 更新店铺状态
      *
      * @param  id       店铺ID
-     * @param  operator 操作人
+     * @param  accountInfo 操作人
      * @param  status   状态
      * @throws BusinessCheckException
      * @return
@@ -346,15 +351,19 @@ public class StoreServiceImpl extends ServiceImpl<MtStoreMapper, MtStore> implem
     @Override
     @Transactional(rollbackFor = Exception.class)
     @OperationServiceLog(description = "修改店铺状态")
-    public void updateStatus(Integer id, String operator, String status) throws BusinessCheckException {
+    public void updateStatus(Integer id, AccountInfo accountInfo, String status) throws BusinessCheckException {
         MtStore mtStore = queryStoreById(id);
         if (null == mtStore) {
             throw new BusinessCheckException("该店铺不存在.");
         }
 
+        if (!mtStore.getMerchantId().equals(accountInfo.getMerchantId())) {
+            throw new BusinessCheckException("您没有权限操作该店铺.");
+        }
+
         mtStore.setStatus(status);
         mtStore.setUpdateTime(new Date());
-        mtStore.setOperator(operator);
+        mtStore.setOperator(accountInfo.getAccountName());
 
         // 删除店铺
         if (status.equals(StatusEnum.DISABLE.getKey())) {
@@ -398,6 +407,18 @@ public class StoreServiceImpl extends ServiceImpl<MtStoreMapper, MtStore> implem
     }
 
     /**
+     * 根据ID获取店铺列表
+     *
+     * @param merchantId 商户ID
+     * @param storeIds 店铺ID列表
+     * @return
+     * */
+    @Override
+    public List<MtStore> getStoreListByIds(Integer merchantId, List<Integer> storeIds) {
+        return mtStoreMapper.getStoreListByIds(merchantId, storeIds);
+    }
+
+    /**
      * 获取我的店铺列表
      *
      * @param merchantId 商户ID
@@ -408,18 +429,6 @@ public class StoreServiceImpl extends ServiceImpl<MtStoreMapper, MtStore> implem
     @Override
     public List<MtStore> getMyStoreList(Integer merchantId, Integer storeId, String status) {
         return mtStoreMapper.getMyStoreList(merchantId, storeId, status);
-    }
-
-    /**
-     * 根据ID获取店铺列表
-     *
-     * @param merchantId 商户ID
-     * @param storeIds 店铺ID列表
-     * @return
-     * */
-    @Override
-    public List<MtStore> getStoreListByIds(Integer merchantId, List<Integer> storeIds) {
-        return mtStoreMapper.getStoreListByIds(merchantId, storeIds);
     }
 
     /**

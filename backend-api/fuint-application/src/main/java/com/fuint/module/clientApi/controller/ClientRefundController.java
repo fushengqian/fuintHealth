@@ -1,8 +1,9 @@
 package com.fuint.module.clientApi.controller;
 
-import com.fuint.common.dto.RefundDto;
-import com.fuint.common.dto.UserInfo;
-import com.fuint.common.dto.UserOrderDto;
+import com.fuint.common.dto.member.UserInfo;
+import com.fuint.common.dto.order.RefundDto;
+import com.fuint.common.dto.order.UserOrderDto;
+import com.fuint.common.dto.system.AccountInfo;
 import com.fuint.common.enums.RefundStatusEnum;
 import com.fuint.common.service.OrderService;
 import com.fuint.common.service.RefundService;
@@ -55,21 +56,15 @@ public class ClientRefundController extends BaseController {
     @CrossOrigin
     public ResponseObject list(@ModelAttribute RefundListRequest param) throws BusinessCheckException {
         UserInfo userInfo = TokenUtil.getUserInfo();
-        param.setUserId(userInfo.getId());
         String status = param.getStatus() != null ? param.getStatus() : "";
         if (status.equals("1")) {
             status = RefundStatusEnum.CREATED.getKey();
         } else {
             status = "";
         }
-        Map<String, Object> params = new HashMap();
-        params.put("userId", userInfo.getId());
-        if (StringUtil.isNotEmpty(status)) {
-            params.put("status", status);
-        }
-        params.put("pageNumber", param.getPage());
-
-        ResponseObject orderData = refundService.getUserRefundList(params);
+        param.setUserId(userInfo.getId());
+        param.setStatus(status);
+        ResponseObject orderData = refundService.getUserRefundList(param);
         return getSuccessResult(orderData.getData());
     }
 
@@ -151,7 +146,7 @@ public class ClientRefundController extends BaseController {
 
         RefundDto refundInfo = refundService.getRefundById(Integer.parseInt(refundId));
         if (refundInfo == null || (!refundInfo.getUserId().equals(mtUser.getId()))) {
-            return getFailureResult(2001);
+            return getFailureResult(201);
         }
 
         if (StringUtil.isEmpty(expressName) || StringUtil.isEmpty(expressNo)) {
@@ -162,7 +157,10 @@ public class ClientRefundController extends BaseController {
         refundDto.setId(Integer.parseInt(refundId));
         refundDto.setExpressName(expressName);
         refundDto.setExpressNo(expressNo);
-        refundService.updateRefund(refundDto);
+        AccountInfo accountInfo = new AccountInfo();
+        accountInfo.setAccountName(mtUser.getMobile());
+        accountInfo.setMerchantId(refundInfo.getMerchantId());
+        refundService.updateRefund(refundDto, accountInfo);
 
         return getSuccessResult(true);
     }

@@ -1,5 +1,6 @@
 package com.fuint.module.backendApi.request;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import java.io.Serializable;
@@ -11,6 +12,7 @@ import java.io.Serializable;
  * CopyRight https://www.fuint.cn
  */
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class StoreSubmitRequest implements Serializable {
 
     @ApiModelProperty(value="店铺ID", name="id")

@@ -3,9 +3,9 @@ package com.fuint.common.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fuint.common.dto.BookDto;
-import com.fuint.common.dto.DayDto;
-import com.fuint.common.dto.TimeDto;
+import com.fuint.common.dto.book.BookDto;
+import com.fuint.common.dto.common.DayDto;
+import com.fuint.common.dto.common.TimeDto;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.param.BookPage;
 import com.fuint.common.param.BookableParam;
@@ -308,7 +308,7 @@ public class BookServiceImpl extends ServiceImpl<MtBookMapper, MtBook> implement
      * @return
      * */
     @Override
-    public List<String> isBookable(BookableParam param) throws BusinessCheckException,ParseException {
+    public List<String> isBookable(BookableParam param) throws BusinessCheckException, ParseException {
        MtBook mtBook = mtBookMapper.selectById(param.getBookId());
        List<String> result = new ArrayList<>();
        if (mtBook == null) {

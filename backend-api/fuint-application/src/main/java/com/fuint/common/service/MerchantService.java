@@ -1,10 +1,11 @@
 package com.fuint.common.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.fuint.common.dto.MerchantDto;
-import com.fuint.common.dto.MerchantSettingDto;
+import com.fuint.common.dto.merchant.MerchantDto;
+import com.fuint.common.dto.merchant.MerchantSettingDto;
+import com.fuint.common.dto.system.AccountInfo;
+import com.fuint.common.param.MerchantPage;
 import com.fuint.framework.exception.BusinessCheckException;
-import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.module.merchantApi.request.MerchantSettingParam;
 import com.fuint.repository.model.MtMerchant;
@@ -23,10 +24,10 @@ public interface MerchantService extends IService<MtMerchant> {
     /**
      * 分页查询商户列表
      *
-     * @param paginationRequest
+     * @param merchantPage
      * @return
      */
-    PaginationResponse<MerchantDto> queryMerchantListByPagination(PaginationRequest paginationRequest);
+    PaginationResponse<MerchantDto> queryMerchantListByPagination(MerchantPage merchantPage);
 
     /**
      * 保存商户信息
@@ -111,8 +112,9 @@ public interface MerchantService extends IService<MtMerchant> {
      * 保存商户设置信息
      *
      * @param params 商户设置项
+     * @param accountInfo 登录账号信息
      * @return
      * */
-    MerchantSettingDto saveMerchantSetting(MerchantSettingParam params) throws BusinessCheckException;
+    MerchantSettingDto saveMerchantSetting(MerchantSettingParam params, AccountInfo accountInfo) throws BusinessCheckException;
 
 }

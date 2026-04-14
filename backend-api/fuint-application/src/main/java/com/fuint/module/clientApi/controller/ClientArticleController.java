@@ -1,6 +1,6 @@
 package com.fuint.module.clientApi.controller;
 
-import com.fuint.common.dto.ArticleDto;
+import com.fuint.common.dto.content.ArticleDto;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.param.ArticleDetailParam;
 import com.fuint.common.param.ArticlePage;
@@ -72,7 +72,6 @@ public class ClientArticleController extends BaseController {
     @CrossOrigin
     public ResponseObject detail(@RequestBody ArticleDetailParam articleDetailParam) throws BusinessCheckException {
         Integer articleId = articleDetailParam.getArticleId() == null ? 0 : articleDetailParam.getArticleId();
-
         // 更新阅读点击数
         ArticleDto mtArticle = articleService.getArticleDetail(articleId);
         if (mtArticle != null && mtArticle.getId() != null) {
