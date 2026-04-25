@@ -10,6 +10,7 @@ import com.fuint.common.param.MemberPage;
 import com.fuint.common.service.HealthRecordService;
 import com.fuint.common.service.HealthReportService;
 import com.fuint.common.service.MemberService;
+import com.fuint.common.service.PointExchangeService;
 import com.fuint.common.service.StaffService;
 import com.fuint.common.service.UserGradeService;
 import com.fuint.common.util.DateUtil;
@@ -69,6 +70,11 @@ public class MerchantMemberController extends BaseController {
      * 健康记录服务接口
      **/
     private HealthRecordService healthRecordService;
+
+    /**
+     * 积分兑换服务接口
+     **/
+    private PointExchangeService pointExchangeService;
 
     /**
      * 会员列表查询
@@ -316,5 +322,88 @@ public class MerchantMemberController extends BaseController {
             result.put("bmi", "暂无数据");
         }
         return getSuccessResult(result);
+    }
+
+    /**
+     * 查询可兑换的优惠券列表
+     */
+    @ApiOperation(value = "查询可兑换的优惠券列表")
+    @RequestMapping(value = "/getExchangeableCoupons", method = RequestMethod.GET)
+    @CrossOrigin
+    public ResponseObject getExchangeableCoupons(@RequestParam("memberId") Integer memberId) throws BusinessCheckException {
+        UserInfo userInfo = TokenUtil.getUserInfo();
+
+        MtStaff staffInfo = null;
+        MtUser mtUser = memberService.queryMemberById(userInfo.getId());
+        if (mtUser != null && mtUser.getMobile() != null) {
+            staffInfo = staffService.queryStaffByMobile(mtUser.getMobile());
+        }
+        if (staffInfo == null) {
+            return getFailureResult(201, "您的帐号不是商户，没有操作权限");
+        }
+
+        MtUser memberInfo = memberService.queryMemberById(memberId);
+        if (memberInfo == null) {
+            return getFailureResult(201, "会员信息不存在");
+        }
+
+        if (!memberInfo.getMerchantId().equals(staffInfo.getMerchantId())) {
+            return getFailureResult(201, "您没有权限操作该会员");
+        }
+
+        List<Map<String, Object>> couponList = pointExchangeService.getExchangeableCouponList(staffInfo.getMerchantId(), memberId);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("couponList", couponList);
+        result.put("userPoints", memberInfo.getPoint() == null ? 0 : memberInfo.getPoint());
+
+        return getSuccessResult(result);
+    }
+
+    /**
+     * 执行积分兑换优惠券
+     */
+    @ApiOperation(value = "积分兑换优惠券")
+    @RequestMapping(value = "/exchangeCoupon", method = RequestMethod.POST)
+    @CrossOrigin
+    public ResponseObject exchangeCoupon(@RequestBody Map<String, Object> params) throws BusinessCheckException {
+        UserInfo userInfo = TokenUtil.getUserInfo();
+
+        MtStaff staffInfo = null;
+        MtUser mtUser = memberService.queryMemberById(userInfo.getId());
+        if (mtUser != null && mtUser.getMobile() != null) {
+            staffInfo = staffService.queryStaffByMobile(mtUser.getMobile());
+        }
+        if (staffInfo == null) {
+            return getFailureResult(201, "您的帐号不是商户，没有操作权限");
+        }
+
+        Integer memberId = params.get("memberId") != null ? Integer.valueOf(params.get("memberId").toString()) : null;
+        Integer couponId = params.get("couponId") != null ? Integer.valueOf(params.get("couponId").toString()) : null;
+
+        if (memberId == null || couponId == null) {
+            return getFailureResult(201, "参数错误，会员ID和优惠券ID不能为空");
+        }
+
+        MtUser memberInfo = memberService.queryMemberById(memberId);
+        if (memberInfo == null) {
+            return getFailureResult(201, "会员信息不存在");
+        }
+
+        if (!memberInfo.getMerchantId().equals(staffInfo.getMerchantId())) {
+            return getFailureResult(201, "您没有权限操作该会员");
+        }
+
+        try {
+            Map<String, Object> result = pointExchangeService.exchangeCoupon(
+                staffInfo.getMerchantId(),
+                memberId,
+                couponId,
+                userInfo.getUserName()
+            );
+            return getSuccessResult(result);
+        } catch (BusinessCheckException e) {
+            return getFailureResult(201, e.getMessage());
+        }
     }
 }

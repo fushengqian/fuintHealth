@@ -9,6 +9,8 @@ const api = {
   exportHealthReport: 'merchantApi/member/exportHealthReport',
   saveHealthRecord: 'merchantApi/member/saveHealthRecord',
   getLatestHealthRecord: 'merchantApi/member/getLatestHealthRecord',
+  getExchangeableCoupons: 'merchantApi/member/getExchangeableCoupons',
+  exchangeCoupon: 'merchantApi/member/exchangeCoupon',
 }
 
 // 会员详情
@@ -57,4 +59,14 @@ export function saveHealthRecord(param) {
 // 获取最新体检数据
 export function getLatestHealthRecord(memberId) {
   return request.get(api.getLatestHealthRecord, { memberId })
+}
+
+// 获取可兑换优惠券列表
+export function getExchangeableCoupons(memberId) {
+  return request.get(api.getExchangeableCoupons, { memberId })
+}
+
+// 积分兑换优惠券
+export function exchangeCoupon(param) {
+  return request.post(api.exchangeCoupon, param)
 }

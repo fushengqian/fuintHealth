@@ -88,6 +88,35 @@
       </view>
     </view>
 
+    <!-- 积分兑换成功弹窗 -->
+    <view v-if="showExchangeSuccess" class="popup-mask" @click="hideExchangeSuccessPopup">
+      <view class="popup-content" @click.stop>
+        <view class="popup-header">
+          <text class="popup-title">兑换成功</text>
+          <text class="popup-close" @click="hideExchangeSuccessPopup">×</text>
+        </view>
+        <view class="popup-body">
+          <view class="success-icon">✓</view>
+          <view class="success-text">优惠券已发放至会员账户</view>
+          <view class="success-info">
+            <text>优惠券：{{ exchangeResult.couponName }}</text>
+          </view>
+          <view class="success-info">
+            <text>券码：{{ exchangeResult.code }}</text>
+          </view>
+          <view class="success-info">
+            <text>消耗积分：{{ exchangeResult.deductPoint }}</text>
+          </view>
+          <view class="success-info">
+            <text>剩余积分：{{ exchangeResult.remainingPoint }}</text>
+          </view>
+        </view>
+        <view class="popup-footer">
+          <button class="btn-confirm" @click="hideExchangeSuccessPopup">确定</button>
+        </view>
+      </view>
+    </view>
+
     <!-- 会员资产 -->
     <view class="my-asset">
       <view class="asset-left flex-box dis-flex flex-x-center">
@@ -137,6 +166,77 @@
             </button>
           </view>
         </block>
+      </view>
+    </view>
+
+    <!-- 标签页导航 -->
+    <view class="tab-nav">
+      <view 
+        class="tab-item" 
+        :class="{ active: currentTab === 'info' }" 
+        @click="switchTab('info')"
+      >
+        <text>会员信息</text>
+      </view>
+      <view 
+        class="tab-item" 
+        :class="{ active: currentTab === 'exchange' }" 
+        @click="switchTab('exchange')"
+      >
+        <text>积分兑换</text>
+      </view>
+    </view>
+
+    <!-- 积分兑换标签页内容 -->
+    <view v-if="currentTab === 'exchange'" class="exchange-content">
+      <view class="exchange-header">
+        <view class="current-point">
+          <text class="point-label">当前积分</text>
+          <text class="point-value">{{ userInfo.point ? userInfo.point : 0 }}</text>
+        </view>
+      </view>
+
+      <view v-if="exchangeCouponList.length === 0" class="empty-tip">
+        <text>暂无可兑换的优惠券</text>
+      </view>
+
+      <view v-else class="coupon-list">
+        <view 
+          v-for="(coupon, index) in exchangeCouponList" 
+          :key="index" 
+          class="coupon-item"
+        >
+          <view class="coupon-left">
+            <view class="coupon-amount">
+              <text v-if="coupon.type === 'C'">￥</text>
+              <text>{{ coupon.amount }}</text>
+            </view>
+            <view class="coupon-type">
+              <text>{{ coupon.type === 'C' ? '优惠券' : coupon.type === 'P' ? '储值卡' : '计次卡' }}</text>
+            </view>
+          </view>
+          <view class="coupon-middle">
+            <view class="coupon-name">{{ coupon.name }}</view>
+            <view class="coupon-info">
+              <text class="info-item">所需积分：{{ coupon.point }}</text>
+            </view>
+            <view class="coupon-info">
+              <text class="info-item">剩余数量：{{ coupon.leftNum }}</text>
+            </view>
+            <view v-if="coupon.description" class="coupon-desc">
+              <text>{{ coupon.description }}</text>
+            </view>
+          </view>
+          <view class="coupon-right">
+            <button 
+              class="exchange-btn" 
+              :class="{ disabled: userInfo.point < coupon.point }"
+              @click="handleExchange(coupon)"
+            >
+              <text>{{ userInfo.point >= coupon.point ? '兑换' : '积分不足' }}</text>
+            </button>
+          </view>
+        </view>
       </view>
     </view>
   </view>
@@ -200,7 +300,15 @@
           bloodSugar: '',
           checkupDate: '',
           description: ''
-        }
+        },
+        // 当前标签页
+        currentTab: 'info',
+        // 可兑换优惠券列表
+        exchangeCouponList: [],
+        // 兑换成功弹窗
+        showExchangeSuccess: false,
+        // 兑换结果
+        exchangeResult: {}
       }
     },
 
@@ -456,6 +564,96 @@
             console.error('保存失败', err);
             uni.showToast({ title: '保存失败，请稍后重试', icon: 'none' });
           });
+      },
+
+      // 切换标签页
+      switchTab(tab) {
+        const app = this;
+        app.currentTab = tab;
+        if (tab === 'exchange') {
+          app.getExchangeableCoupons();
+        }
+      },
+
+      // 获取可兑换优惠券列表
+      getExchangeableCoupons() {
+        const app = this;
+        if (!app.isLogin || !app.memberId) {
+          return;
+        }
+        MemberApi.getExchangeableCoupons(app.memberId)
+          .then(result => {
+            if (result.data && result.data.couponList) {
+              app.exchangeCouponList = result.data.couponList;
+              if (result.data.userPoints !== undefined && result.data.userPoints !== null) {
+                app.userInfo.point = result.data.userPoints;
+              }
+            } else {
+              app.exchangeCouponList = [];
+            }
+          })
+          .catch(err => {
+            console.error('获取可兑换优惠券列表失败', err);
+            uni.showToast({ title: '获取数据失败，请稍后重试', icon: 'none' });
+          });
+      },
+
+      // 处理兑换操作
+      handleExchange(coupon) {
+        const app = this;
+        if (!app.isLogin) {
+          uni.showToast({ title: '请先登录', icon: 'none' });
+          return;
+        }
+
+        const userPoints = app.userInfo.point ? app.userInfo.point : 0;
+        if (userPoints < coupon.point) {
+          uni.showToast({ title: '积分不足', icon: 'none' });
+          return;
+        }
+
+        uni.showModal({
+          title: '确认兑换',
+          content: `确认使用 ${coupon.point} 积分兑换「${coupon.name}」吗？`,
+          success: (res) => {
+            if (res.confirm) {
+              app.doExchange(coupon);
+            }
+          }
+        });
+      },
+
+      // 执行兑换
+      doExchange(coupon) {
+        const app = this;
+        uni.showLoading({ title: '兑换中...' });
+
+        MemberApi.exchangeCoupon({
+          memberId: app.memberId,
+          couponId: coupon.id
+        })
+          .then(result => {
+            uni.hideLoading();
+            if (result.data && result.data.success) {
+              app.exchangeResult = result.data;
+              app.showExchangeSuccess = true;
+              app.userInfo.point = result.data.remainingPoint;
+              app.getExchangeableCoupons();
+            } else {
+              uni.showToast({ title: result.message || '兑换失败', icon: 'none' });
+            }
+          })
+          .catch(err => {
+            uni.hideLoading();
+            console.error('兑换失败', err);
+            const errorMsg = err.result && err.result.message ? err.result.message : '兑换失败，请稍后重试';
+            uni.showToast({ title: errorMsg, icon: 'none' });
+          });
+      },
+
+      // 隐藏兑换成功弹窗
+      hideExchangeSuccessPopup() {
+        this.showExchangeSuccess = false;
       }
     },
 
@@ -868,6 +1066,253 @@
         .btn-confirm {
           background: $fuint-theme;
           color: #fff;
+        }
+      }
+    }
+  }
+
+  // 标签页导航
+  .tab-nav {
+    display: flex;
+    background: #fff;
+    margin: 10rpx 20rpx;
+    border-radius: 10rpx;
+    overflow: hidden;
+    border: 2rpx #f5f5f5 solid;
+
+    .tab-item {
+      flex: 1;
+      text-align: center;
+      padding: 30rpx 0;
+      font-size: 28rpx;
+      color: #666;
+      position: relative;
+
+      &.active {
+        color: $fuint-theme;
+        font-weight: bold;
+
+        &::after {
+          content: '';
+          position: absolute;
+          bottom: 0;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 60rpx;
+          height: 4rpx;
+          background: $fuint-theme;
+          border-radius: 2rpx;
+        }
+      }
+    }
+  }
+
+  // 积分兑换内容
+  .exchange-content {
+    background: #fff;
+    margin: 10rpx 20rpx 20rpx;
+    border-radius: 10rpx;
+    border: 2rpx #f5f5f5 solid;
+    min-height: 400rpx;
+
+    .exchange-header {
+      padding: 30rpx;
+      border-bottom: 1rpx solid #f5f5f5;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      .current-point {
+        display: flex;
+        align-items: baseline;
+
+        .point-label {
+          font-size: 28rpx;
+          color: #666;
+          margin-right: 10rpx;
+        }
+
+        .point-value {
+          font-size: 40rpx;
+          font-weight: bold;
+          color: $fuint-theme;
+        }
+      }
+    }
+
+    .empty-tip {
+      padding: 80rpx 0;
+      text-align: center;
+      font-size: 28rpx;
+      color: #999;
+    }
+  }
+
+  // 优惠券列表
+  .coupon-list {
+    padding: 20rpx;
+
+    .coupon-item {
+      display: flex;
+      margin-bottom: 20rpx;
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+      border-radius: 12rpx;
+      overflow: hidden;
+      position: relative;
+
+      .coupon-left {
+        width: 180rpx;
+        padding: 30rpx 10rpx;
+        text-align: center;
+        position: relative;
+
+        &::after {
+          content: '';
+          position: absolute;
+          right: 0;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 1rpx;
+          height: 60%;
+          border-right: 2rpx dashed rgba(255, 255, 255, 0.3);
+        }
+
+        .coupon-amount {
+          color: #fff;
+          font-weight: bold;
+          line-height: 1;
+
+          text:first-child {
+            font-size: 28rpx;
+          }
+
+          text:last-child {
+            font-size: 48rpx;
+          }
+        }
+
+        .coupon-type {
+          margin-top: 10rpx;
+          font-size: 22rpx;
+          color: rgba(255, 255, 255, 0.8);
+        }
+      }
+
+      .coupon-middle {
+        flex: 1;
+        padding: 25rpx 20rpx;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+
+        .coupon-name {
+          font-size: 30rpx;
+          font-weight: bold;
+          color: #fff;
+          margin-bottom: 10rpx;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .coupon-info {
+          margin-bottom: 6rpx;
+
+          .info-item {
+            font-size: 24rpx;
+            color: rgba(255, 255, 255, 0.9);
+          }
+        }
+
+        .coupon-desc {
+          font-size: 22rpx;
+          color: rgba(255, 255, 255, 0.7);
+          margin-top: 6rpx;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+      }
+
+      .coupon-right {
+        width: 140rpx;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 15rpx;
+
+        .exchange-btn {
+          width: 100%;
+          padding: 16rpx 0;
+          background: #fff;
+          border-radius: 30rpx;
+          font-size: 26rpx;
+          color: #ee5a5a;
+          font-weight: bold;
+          border: none;
+          line-height: 1;
+
+          &.disabled {
+            background: rgba(255, 255, 255, 0.6);
+            color: #999;
+          }
+        }
+      }
+
+      &::before,
+      &::after {
+        content: '';
+        position: absolute;
+        width: 24rpx;
+        height: 24rpx;
+        border-radius: 50%;
+        background: #f5f5f5;
+        left: 168rpx;
+        z-index: 1;
+      }
+
+      &::before {
+        top: -12rpx;
+      }
+
+      &::after {
+        bottom: -12rpx;
+      }
+    }
+  }
+
+  // 兑换成功弹窗样式
+  .popup-mask {
+    .popup-content {
+      .success-icon {
+        width: 100rpx;
+        height: 100rpx;
+        line-height: 100rpx;
+        text-align: center;
+        margin: 20rpx auto;
+        background: #52c41a;
+        border-radius: 50%;
+        color: #fff;
+        font-size: 48rpx;
+        font-weight: bold;
+      }
+
+      .success-text {
+        text-align: center;
+        font-size: 32rpx;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 30rpx;
+      }
+
+      .success-info {
+        padding: 16rpx 0;
+        font-size: 28rpx;
+        color: #666;
+        text-align: center;
+
+        text {
+          display: inline-block;
         }
       }
     }
