@@ -7,6 +7,8 @@ const api = {
   list: 'merchantApi/member/list',
   save: 'merchantApi/member/save',
   exportHealthReport: 'merchantApi/member/exportHealthReport',
+  saveHealthRecord: 'merchantApi/member/saveHealthRecord',
+  getLatestHealthRecord: 'merchantApi/member/getLatestHealthRecord',
 }
 
 // 会员详情
@@ -45,4 +47,14 @@ export function exportHealthReport(memberId) {
       }
     })
   })
+}
+
+// 保存体检数据
+export function saveHealthRecord(param) {
+  return request.post(api.saveHealthRecord, param)
+}
+
+// 获取最新体检数据
+export function getLatestHealthRecord(memberId) {
+  return request.get(api.getLatestHealthRecord, { memberId })
 }

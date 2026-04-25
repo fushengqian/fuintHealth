@@ -7,6 +7,7 @@ import com.fuint.common.param.MemberDetailParam;
 import com.fuint.common.param.MemberInfoParam;
 import com.fuint.common.param.MemberListParam;
 import com.fuint.common.param.MemberPage;
+import com.fuint.common.service.HealthRecordService;
 import com.fuint.common.service.HealthReportService;
 import com.fuint.common.service.MemberService;
 import com.fuint.common.service.StaffService;
@@ -63,6 +64,11 @@ public class MerchantMemberController extends BaseController {
      * 健康报告服务接口
      **/
     private HealthReportService healthReportService;
+
+    /**
+     * 健康记录服务接口
+     **/
+    private HealthRecordService healthRecordService;
 
     /**
      * 会员列表查询
@@ -205,5 +211,110 @@ public class MerchantMemberController extends BaseController {
         }
 
         healthReportService.generateHealthReportPdf(memberId, response);
+    }
+
+    /**
+     * 保存会员体检数据
+     */
+    @ApiOperation(value = "保存会员体检数据")
+    @RequestMapping(value = "/saveHealthRecord", method = RequestMethod.POST)
+    @CrossOrigin
+    public ResponseObject saveHealthRecord(@RequestBody Map<String, Object> params) throws BusinessCheckException {
+        UserInfo userInfo = TokenUtil.getUserInfo();
+
+        MtStaff staffInfo = null;
+        MtUser mtUser = memberService.queryMemberById(userInfo.getId());
+        if (mtUser != null && mtUser.getMobile() != null) {
+            staffInfo = staffService.queryStaffByMobile(mtUser.getMobile());
+        }
+        if (staffInfo == null) {
+            return getFailureResult(201, "您的帐号不是商户，没有操作权限");
+        }
+
+        Integer memberId = params.get("memberId") != null ? Integer.valueOf(params.get("memberId").toString()) : null;
+        if (memberId == null) {
+            return getFailureResult(201, "会员ID不能为空");
+        }
+
+        MtUser memberInfo = memberService.queryMemberById(memberId);
+        if (memberInfo == null) {
+            return getFailureResult(201, "会员信息不存在");
+        }
+
+        if (!memberInfo.getMerchantId().equals(staffInfo.getMerchantId())) {
+            return getFailureResult(201, "您没有权限操作该会员");
+        }
+
+        com.fuint.repository.model.MtHealthRecord record = new com.fuint.repository.model.MtHealthRecord();
+        record.setUserId(memberId);
+        record.setOperator(userInfo.getUserName());
+
+        if (params.get("id") != null) {
+            record.setId(Integer.valueOf(params.get("id").toString()));
+        }
+        if (params.get("height") != null && !params.get("height").toString().isEmpty()) {
+            record.setHeight(new java.math.BigDecimal(params.get("height").toString()));
+        }
+        if (params.get("weight") != null && !params.get("weight").toString().isEmpty()) {
+            record.setWeight(new java.math.BigDecimal(params.get("weight").toString()));
+        }
+        if (params.get("bloodPressure") != null) {
+            record.setBloodPressure(params.get("bloodPressure").toString());
+        }
+        if (params.get("bloodSugar") != null && !params.get("bloodSugar").toString().isEmpty()) {
+            record.setBloodSugar(new java.math.BigDecimal(params.get("bloodSugar").toString()));
+        }
+        if (params.get("checkupDate") != null && !params.get("checkupDate").toString().isEmpty()) {
+            try {
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
+                record.setCheckupDate(sdf.parse(params.get("checkupDate").toString()));
+            } catch (Exception e) {
+                // 忽略日期解析错误，使用当前日期
+            }
+        }
+        if (params.get("description") != null) {
+            record.setDescription(params.get("description").toString());
+        }
+
+        record = healthRecordService.saveHealthRecord(record);
+        return getSuccessResult(record);
+    }
+
+    /**
+     * 查询会员最新体检数据
+     */
+    @ApiOperation(value = "查询会员最新体检数据")
+    @RequestMapping(value = "/getLatestHealthRecord", method = RequestMethod.GET)
+    @CrossOrigin
+    public ResponseObject getLatestHealthRecord(@RequestParam("memberId") Integer memberId) throws BusinessCheckException {
+        UserInfo userInfo = TokenUtil.getUserInfo();
+
+        MtStaff staffInfo = null;
+        MtUser mtUser = memberService.queryMemberById(userInfo.getId());
+        if (mtUser != null && mtUser.getMobile() != null) {
+            staffInfo = staffService.queryStaffByMobile(mtUser.getMobile());
+        }
+        if (staffInfo == null) {
+            return getFailureResult(201, "您的帐号不是商户，没有操作权限");
+        }
+
+        MtUser memberInfo = memberService.queryMemberById(memberId);
+        if (memberInfo == null) {
+            return getFailureResult(201, "会员信息不存在");
+        }
+
+        if (!memberInfo.getMerchantId().equals(staffInfo.getMerchantId())) {
+            return getFailureResult(201, "您没有权限操作该会员");
+        }
+
+        com.fuint.repository.model.MtHealthRecord record = healthRecordService.queryLatestByUserId(memberId);
+        Map<String, Object> result = new HashMap<>();
+        result.put("record", record);
+        if (record != null && record.getHeight() != null && record.getWeight() != null) {
+            result.put("bmi", healthRecordService.calculateBMI(record.getWeight(), record.getHeight()));
+        } else {
+            result.put("bmi", "暂无数据");
+        }
+        return getSuccessResult(result);
     }
 }

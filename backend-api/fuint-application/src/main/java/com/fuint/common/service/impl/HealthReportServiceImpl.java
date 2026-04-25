@@ -1,5 +1,6 @@
 package com.fuint.common.service.impl;
 
+import com.fuint.common.service.HealthRecordService;
 import com.fuint.common.service.HealthReportService;
 import com.fuint.common.service.MemberService;
 import com.fuint.common.util.DateUtil;
@@ -35,12 +36,16 @@ public class HealthReportServiceImpl implements HealthReportService {
 
     private MemberService memberService;
 
+    private HealthRecordService healthRecordService;
+
     @Override
     public void generateHealthReportPdf(Integer memberId, HttpServletResponse response) throws BusinessCheckException {
         MtUser memberInfo = memberService.queryMemberById(memberId);
         if (memberInfo == null) {
             throw new BusinessCheckException("会员信息不存在");
         }
+
+        com.fuint.repository.model.MtHealthRecord latestRecord = healthRecordService.queryLatestByUserId(memberId);
 
         try (PDDocument document = new PDDocument()) {
             PDPage page = new PDPage(PDRectangle.A4);
@@ -87,10 +92,20 @@ public class HealthReportServiceImpl implements HealthReportService {
 
                 String name = memberInfo.getName() != null ? memberInfo.getName() : "未填写";
                 String mobile = memberInfo.getMobile() != null ? memberInfo.getMobile() : "未填写";
-                String lastCheckupTime = memberInfo.getUpdateTime() != null ? 
-                    DateUtil.formatDate(memberInfo.getUpdateTime(), "yyyy-MM-dd HH:mm") : 
-                    (memberInfo.getCreateTime() != null ? DateUtil.formatDate(memberInfo.getCreateTime(), "yyyy-MM-dd HH:mm") : "暂无记录");
-                String bmi = calculateBMI(memberInfo);
+                
+                String lastCheckupTime = "暂无记录";
+                if (latestRecord != null && latestRecord.getCheckupDate() != null) {
+                    lastCheckupTime = DateUtil.formatDate(latestRecord.getCheckupDate(), "yyyy-MM-dd");
+                } else if (memberInfo.getUpdateTime() != null) {
+                    lastCheckupTime = DateUtil.formatDate(memberInfo.getUpdateTime(), "yyyy-MM-dd");
+                } else if (memberInfo.getCreateTime() != null) {
+                    lastCheckupTime = DateUtil.formatDate(memberInfo.getCreateTime(), "yyyy-MM-dd");
+                }
+                
+                String bmi = "暂无数据";
+                if (latestRecord != null && latestRecord.getHeight() != null && latestRecord.getWeight() != null) {
+                    bmi = healthRecordService.calculateBMI(latestRecord.getWeight(), latestRecord.getHeight());
+                }
 
                 drawRow(contentStream, chineseFont, contentFontSize, "姓名", "Name", name, margin, yPosition, pageWidth);
                 yPosition -= 30;
@@ -286,9 +301,5 @@ public class HealthReportServiceImpl implements HealthReportService {
         contentStream.newLineAtOffset(x, y);
         contentStream.showText(text);
         contentStream.endText();
-    }
-
-    private String calculateBMI(MtUser memberInfo) {
-        return "暂无数据";
     }
 }
