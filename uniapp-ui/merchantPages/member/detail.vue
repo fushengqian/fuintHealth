@@ -36,6 +36,56 @@
         <view class="no" v-if="userInfo.userNo">会员号：{{ userInfo.userNo ? userInfo.userNo : '-'}}</view>
         <view class="time">{{ userInfo.createTime | timeFormat('yyyy-mm-dd hh:MM') }}</view>
       </view>
+      <view class="export-btn" v-if="isLogin" @click="exportHealthReport">
+        <text class="btn-text">导出健康报告</text>
+      </view>
+      <view class="export-btn add-record-btn" v-if="isLogin" @click="showHealthRecordPopup">
+        <text class="btn-text">录入体检数据</text>
+      </view>
+    </view>
+
+    <!-- 录入体检数据弹窗 -->
+    <view v-if="showPopup" class="popup-mask" @click="hideHealthRecordPopup">
+      <view class="popup-content" @click.stop>
+        <view class="popup-header">
+          <text class="popup-title">录入体检数据</text>
+          <text class="popup-close" @click="hideHealthRecordPopup">×</text>
+        </view>
+        <view class="popup-body">
+          <view class="form-item">
+            <view class="form-label">体检日期</view>
+            <picker mode="date" :value="healthRecord.checkupDate" @change="onDateChange">
+              <view class="form-input">
+                <text>{{ healthRecord.checkupDate || '请选择日期' }}</text>
+              </view>
+            </picker>
+          </view>
+          <view class="form-item">
+            <view class="form-label">身高 (cm)</view>
+            <input class="form-input" type="digit" v-model="healthRecord.height" placeholder="请输入身高" />
+          </view>
+          <view class="form-item">
+            <view class="form-label">体重 (kg)</view>
+            <input class="form-input" type="digit" v-model="healthRecord.weight" placeholder="请输入体重" />
+          </view>
+          <view class="form-item">
+            <view class="form-label">血压 (mmHg)</view>
+            <input class="form-input" type="text" v-model="healthRecord.bloodPressure" placeholder="如：120/80" />
+          </view>
+          <view class="form-item">
+            <view class="form-label">血糖 (mmol/L)</view>
+            <input class="form-input" type="digit" v-model="healthRecord.bloodSugar" placeholder="请输入血糖值" />
+          </view>
+          <view class="form-item">
+            <view class="form-label">备注</view>
+            <textarea class="form-textarea" v-model="healthRecord.description" placeholder="请输入备注信息" />
+          </view>
+        </view>
+        <view class="popup-footer">
+          <button class="btn-cancel" @click="hideHealthRecordPopup">取消</button>
+          <button class="btn-confirm" @click="saveHealthRecord">保存</button>
+        </view>
+      </view>
     </view>
 
     <!-- 会员资产 -->
@@ -138,7 +188,19 @@
         // 会员ID
         memberId: 0,
         // 会员编码
-        userCode: ''
+        userCode: '',
+        // 体检数据弹窗
+        showPopup: false,
+        // 体检数据
+        healthRecord: {
+          memberId: 0,
+          height: '',
+          weight: '',
+          bloodPressure: '',
+          bloodSugar: '',
+          checkupDate: '',
+          description: ''
+        }
       }
     },
 
@@ -267,6 +329,97 @@
           const app = this;
           console.log(app.userCode)
           app.$navTo(url + '?memberId=' + app.memberId + '&code=' + app.userCode);
+      },
+
+      // 导出健康报告
+      exportHealthReport() {
+        const app = this;
+        uni.showLoading({ title: '正在生成报告...' });
+        MemberApi.exportHealthReport(app.memberId)
+          .then(tempFilePath => {
+            uni.hideLoading();
+            uni.openDocument({
+              filePath: tempFilePath,
+              fileType: 'pdf',
+              showMenu: true,
+              success: (res) => {
+                console.log('打开文档成功', res);
+              },
+              fail: (err) => {
+                console.error('打开文档失败', err);
+                uni.showToast({ title: '打开文档失败', icon: 'none' });
+              }
+            });
+          })
+          .catch(err => {
+            uni.hideLoading();
+            console.error('导出失败', err);
+            uni.showToast({ title: '导出失败，请稍后重试', icon: 'none' });
+          });
+      },
+
+      // 显示录入体检数据弹窗
+      showHealthRecordPopup() {
+        const app = this;
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        app.healthRecord = {
+          memberId: app.memberId,
+          height: '',
+          weight: '',
+          bloodPressure: '',
+          bloodSugar: '',
+          checkupDate: `${year}-${month}-${day}`,
+          description: ''
+        };
+        app.showPopup = true;
+      },
+
+      // 隐藏录入体检数据弹窗
+      hideHealthRecordPopup() {
+        this.showPopup = false;
+      },
+
+      // 日期选择改变
+      onDateChange(e) {
+        this.healthRecord.checkupDate = e.detail.value;
+      },
+
+      // 保存体检数据
+      saveHealthRecord() {
+        const app = this;
+        
+        if (!app.healthRecord.height && !app.healthRecord.weight && 
+            !app.healthRecord.bloodPressure && !app.healthRecord.bloodSugar) {
+          uni.showToast({ title: '请至少填写一项体检数据', icon: 'none' });
+          return;
+        }
+
+        uni.showLoading({ title: '保存中...' });
+        MemberApi.saveHealthRecord({
+          memberId: app.memberId,
+          height: app.healthRecord.height,
+          weight: app.healthRecord.weight,
+          bloodPressure: app.healthRecord.bloodPressure,
+          bloodSugar: app.healthRecord.bloodSugar,
+          checkupDate: app.healthRecord.checkupDate,
+          description: app.healthRecord.description
+        })
+          .then(result => {
+            uni.hideLoading();
+            uni.showToast({ title: '保存成功', icon: 'success' });
+            app.hideHealthRecordPopup();
+            setTimeout(() => {
+              app.getPageData();
+            }, 1500);
+          })
+          .catch(err => {
+            uni.hideLoading();
+            console.error('保存失败', err);
+            uni.showToast({ title: '保存失败，请稍后重试', icon: 'none' });
+          });
       }
     },
 
@@ -403,6 +556,20 @@
             margin-right: 20rpx;
             color: #f5f5f5;
             float: right;
+        }
+    }
+    .export-btn {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 20rpx 20rpx 0rpx 20rpx;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 8rpx;
+        padding: 16rpx 0;
+        .btn-text {
+            color: #ffffff;
+            font-size: 28rpx;
+            font-weight: bold;
         }
     }
   }
@@ -565,4 +732,108 @@
             }
         }
     }
+  }
+
+  // 录入体检数据弹窗
+  .popup-mask {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+
+    .popup-content {
+      width: 650rpx;
+      background: #fff;
+      border-radius: 16rpx;
+      max-height: 80vh;
+      overflow-y: auto;
+
+      .popup-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 30rpx;
+        border-bottom: 1rpx solid #eee;
+
+        .popup-title {
+          font-size: 32rpx;
+          font-weight: bold;
+          color: #333;
+        }
+
+        .popup-close {
+          font-size: 48rpx;
+          color: #999;
+          line-height: 1;
+        }
+      }
+
+      .popup-body {
+        padding: 30rpx;
+
+        .form-item {
+          margin-bottom: 30rpx;
+
+          .form-label {
+            font-size: 28rpx;
+            color: #333;
+            margin-bottom: 12rpx;
+            display: block;
+          }
+
+          .form-input {
+            height: 80rpx;
+            line-height: 80rpx;
+            padding: 0 20rpx;
+            background: #f5f5f5;
+            border-radius: 8rpx;
+            font-size: 28rpx;
+            color: #333;
+          }
+
+          .form-textarea {
+            height: 120rpx;
+            padding: 20rpx;
+            background: #f5f5f5;
+            border-radius: 8rpx;
+            font-size: 28rpx;
+            color: #333;
+          }
+        }
+      }
+
+      .popup-footer {
+        display: flex;
+        padding: 30rpx;
+        border-top: 1rpx solid #eee;
+
+        .btn-cancel,
+        .btn-confirm {
+          flex: 1;
+          height: 88rpx;
+          line-height: 88rpx;
+          text-align: center;
+          border-radius: 44rpx;
+          font-size: 30rpx;
+          margin: 0 10rpx;
+        }
+
+        .btn-cancel {
+          background: #f5f5f5;
+          color: #666;
+        }
+
+        .btn-confirm {
+          background: $fuint-theme;
+          color: #fff;
+        }
+      }
+    }
+  }
 </style>
