@@ -397,6 +397,42 @@
           return;
         }
 
+        // 身高校验：50-250cm
+        if (app.healthRecord.height) {
+          const height = parseFloat(app.healthRecord.height);
+          if (isNaN(height) || height < 50 || height > 250) {
+            uni.showToast({ title: '身高范围应为 50-250cm', icon: 'none' });
+            return;
+          }
+        }
+
+        // 体重校验：20-300kg
+        if (app.healthRecord.weight) {
+          const weight = parseFloat(app.healthRecord.weight);
+          if (isNaN(weight) || weight < 20 || weight > 300) {
+            uni.showToast({ title: '体重范围应为 20-300kg', icon: 'none' });
+            return;
+          }
+        }
+
+        // 血压校验：格式必须为"数字/数字"
+        if (app.healthRecord.bloodPressure) {
+          const bpPattern = /^\d+\/\d+$/;
+          if (!bpPattern.test(app.healthRecord.bloodPressure)) {
+            uni.showToast({ title: '血压格式应为"数字/数字"，如：120/80', icon: 'none' });
+            return;
+          }
+        }
+
+        // 血糖校验：1-30
+        if (app.healthRecord.bloodSugar) {
+          const bloodSugar = parseFloat(app.healthRecord.bloodSugar);
+          if (isNaN(bloodSugar) || bloodSugar < 1 || bloodSugar > 30) {
+            uni.showToast({ title: '血糖范围应为 1-30', icon: 'none' });
+            return;
+          }
+        }
+
         uni.showLoading({ title: '保存中...' });
         MemberApi.saveHealthRecord({
           memberId: app.memberId,
