@@ -330,11 +330,7 @@ public class BackendOrderController extends BaseController {
     @PreAuthorize("@pms.hasPermission('order:delete')")
     public ResponseObject delete(@PathVariable("id") Integer id) throws BusinessCheckException {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
-        UserOrderDto orderInfo = orderService.getOrderById(id);
-        if (!orderInfo.getMerchantId().equals(accountInfo.getMerchantId())) {
-            return getFailureResult(1004);
-        }
-        orderService.deleteOrder(id, accountInfo.getAccountName());
+        orderService.deleteOrder(id, accountInfo);
         return getSuccessResult(true);
     }
 

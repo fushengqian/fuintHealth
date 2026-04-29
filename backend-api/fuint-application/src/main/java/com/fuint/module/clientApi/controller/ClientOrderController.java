@@ -48,7 +48,7 @@ public class ClientOrderController extends BaseController {
     @CrossOrigin
     public ResponseObject list(@RequestBody OrderListParam orderListParam) throws BusinessCheckException {
         UserInfo userInfo = TokenUtil.getUserInfo();
-        orderListParam.setUserId(userInfo.getId().toString());
+        orderListParam.setUserId(userInfo.getId());
         PaginationResponse orderData = orderService.getUserOrderList(orderListParam);
         return getSuccessResult(orderData);
     }
@@ -84,7 +84,7 @@ public class ClientOrderController extends BaseController {
 
         String orderId = request.getParameter("orderId");
         if (StringUtil.isEmpty(orderId)) {
-            return getFailureResult(2000, "订单不能为空");
+            return getFailureResult(201, "订单不能为空");
         }
 
         if (orderId.length() >= 12) {
@@ -96,7 +96,7 @@ public class ClientOrderController extends BaseController {
 
         UserOrderDto order = orderService.getOrderById(Integer.parseInt(orderId));
         if (!order.getUserId().equals(mtUser.getId())) {
-            return getFailureResult(2000, "订单信息有误");
+            return getFailureResult(201, "订单信息有误");
         }
 
         MtOrder orderInfo = orderService.cancelOrder(order.getId(), "会员取消");
@@ -111,10 +111,6 @@ public class ClientOrderController extends BaseController {
     @CrossOrigin
     public ResponseObject receipt(HttpServletRequest request) throws BusinessCheckException {
         UserInfo mtUser = TokenUtil.getUserInfo();
-        if (mtUser == null) {
-            return getFailureResult(1001, "用户未登录");
-        }
-
         String orderId = request.getParameter("orderId");
         if (StringUtil.isEmpty(orderId)) {
             return getFailureResult(2000, "订单不能为空");

@@ -202,7 +202,7 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
     public PaginationResponse getUserOrderList(OrderListParam orderListParam) {
         Integer page = orderListParam.getPage() == null ? Constants.PAGE_NUMBER : orderListParam.getPage();
         Integer pageSize = orderListParam.getPageSize() == null ? Constants.PAGE_SIZE : orderListParam.getPageSize();
-        String userId = orderListParam.getUserId() == null ? "" : orderListParam.getUserId();
+        Integer userId = orderListParam.getUserId() == null ? 0 : orderListParam.getUserId();
         Integer merchantId = orderListParam.getMerchantId() == null ? 0 : orderListParam.getMerchantId();
         Integer storeId = orderListParam.getStoreId() == null ? 0 : orderListParam.getStoreId();
         String status =  orderListParam.getStatus() == null ? "": orderListParam.getStatus();
@@ -294,10 +294,10 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
         if (StringUtil.isNotEmpty(mobile)) {
             MtUser userInfo = memberService.queryMemberByMobile(merchantId, mobile);
             if (userInfo != null) {
-                userId = userInfo.getId().toString();
+                userId = userInfo.getId();
             }
         }
-        if (StringUtil.isNotBlank(userId) && Integer.parseInt(userId) > 0) {
+        if (userId != null && userId > 0) {
             lambdaQueryWrapper.eq(MtOrder::getUserId, userId);
         }
         if (merchantId != null && merchantId > 0) {
@@ -1334,21 +1334,26 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
      * 根据订单ID删除
      *
      * @param orderId 订单ID
-     * @param operator 操作人
+     * @param accountInfo 操作人
+     * @throws BusinessCheckException
      * @return
      */
     @Override
     @OperationServiceLog(description = "删除订单信息")
-    public void deleteOrder(Integer orderId, String operator) {
-        logger.info("orderService.deleteOrder orderId = {}, operator = {}", orderId, operator);
+    public void deleteOrder(Integer orderId, AccountInfo accountInfo) throws BusinessCheckException {
+        logger.info("orderService.deleteOrder orderId = {}, operator = {}", orderId, accountInfo.getAccountName());
         MtOrder mtOrder = mtOrderMapper.selectById(orderId);
         if (mtOrder == null) {
-            return;
+            throw new BusinessCheckException("订单不存在");
+        }
+
+        if (!mtOrder.getMerchantId().equals(accountInfo.getMerchantId())) {
+            throw new BusinessCheckException("不同商户，无操作权限");
         }
 
         mtOrder.setStatus(OrderStatusEnum.DELETED.getKey());
         mtOrder.setUpdateTime(new Date());
-        mtOrder.setOperator(operator);
+        mtOrder.setOperator(accountInfo.getAccountName());
 
         mtOrderMapper.updateById(mtOrder);
     }
@@ -2231,6 +2236,8 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
         // 使用的卡券
         MtCoupon useCouponInfo = null;
         BigDecimal couponAmount = new BigDecimal("0");
+        // 适用商品的价格（用于按比例计算折扣）
+        BigDecimal couponApplyGoodsAmount = new BigDecimal("0");
         if (couponId > 0) {
             MtUserCoupon userCouponInfo = userCouponService.getUserCouponDetail(couponId);
             if (userCouponInfo != null) {
@@ -2241,8 +2248,35 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
                        couponAmount = useCouponInfo.getAmount();
                        // 折扣券
                        if (useCouponInfo.getContent().equals(CouponContentEnum.PERCENT.getKey())) {
+                           // 检查卡券是否设置了只适用于部分商品
+                           if (useCouponInfo.getApplyGoods() != null && useCouponInfo.getApplyGoods().equals(ApplyGoodsEnum.PARK_GOODS.getKey())) {
+                               // 获取适用商品列表
+                               List<MtCouponGoods> couponGoodsList = mtCouponGoodsMapper.getCouponGoods(useCouponInfo.getId());
+                               if (couponGoodsList != null && couponGoodsList.size() > 0) {
+                                   List<Integer> applyGoodsIds = couponGoodsList.stream().map(MtCouponGoods::getGoodsId).collect(Collectors.toList());
+                                   // 计算购物车中属于适用商品的价格
+                                   for (MtCart mtCart : cartList) {
+                                       if (applyGoodsIds.contains(mtCart.getGoodsId())) {
+                                           MtGoods mtGoodsInfo = goodsService.queryGoodsById(mtCart.getGoodsId());
+                                           if (mtGoodsInfo != null) {
+                                               BigDecimal goodsPrice = mtGoodsInfo.getPrice();
+                                               // 如果有SKU，取SKU价格
+                                               if (mtCart.getSkuId() != null && mtCart.getSkuId() > 0) {
+                                                   MtGoodsSku mtGoodsSku = mtGoodsSkuMapper.selectById(mtCart.getSkuId());
+                                                   if (mtGoodsSku != null && mtGoodsSku.getPrice().compareTo(new BigDecimal("0")) > 0) {
+                                                       goodsPrice = mtGoodsSku.getPrice();
+                                                   }
+                                               }
+                                               couponApplyGoodsAmount = couponApplyGoodsAmount.add(goodsPrice.multiply(new BigDecimal(mtCart.getNum())));
+                                           }
+                                       }
+                                   }
+                               }
+                           }
+                           // 如果没有设置适用商品金额，则使用整单价格
+                           BigDecimal basePrice = couponApplyGoodsAmount.compareTo(new BigDecimal("0")) > 0 ? couponApplyGoodsAmount : totalPrice;
                            BigDecimal disc = userCouponInfo.getAmount().divide(new BigDecimal("100"), BigDecimal.ROUND_CEILING, 4);
-                           couponAmount = totalPrice.multiply(new BigDecimal(1).subtract(disc));
+                           couponAmount = basePrice.multiply(new BigDecimal(1).subtract(disc));
                        }
                    } else if (useCouponInfo.getType().equals(CouponTypeEnum.PRESTORE.getKey())) {
                        BigDecimal couponTotalAmount = userCouponInfo.getBalance();
