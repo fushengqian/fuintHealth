@@ -5,6 +5,7 @@ import com.fuint.common.dto.report.*;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.service.*;
 import com.fuint.common.util.DateUtil;
+import com.fuint.common.util.TimeUtils;
 import com.fuint.repository.mapper.MtGoodsCateMapper;
 import com.fuint.repository.mapper.MtGoodsMapper;
 import com.fuint.repository.mapper.MtOrderGoodsMapper;
@@ -108,6 +109,42 @@ public class ReportServiceImpl implements ReportService {
         result.put("totalPayUserCount", totalPayUserCount);
         result.put("storeList", storeList);
 
+        return result;
+    }
+
+    @Override
+    public Map<String, Object> getChartData(String tag, Integer merchantId, Integer storeId) {
+        ArrayList<String> days = TimeUtils.getDays(5);
+        days.add("昨天");
+        days.add("今天");
+
+        Map<String, Object> result = new HashMap<>();
+        if (tag.equals("payment")) {
+            BigDecimal[] orderPayData = {new BigDecimal("0"), new BigDecimal("0"), new BigDecimal("0"), new BigDecimal("0"), new BigDecimal("0"), new BigDecimal("0"), new BigDecimal("0")};
+            for (int i = 0; i < 7; i++) {
+                Date beginTime = DateUtil.getDayBegin((6 - i));
+                Date endTime = DateUtil.getDayEnd((6 - i));
+                BigDecimal payMoney = orderService.getPayMoney(merchantId, storeId, beginTime, endTime);
+                orderPayData[i] = payMoney == null ? new BigDecimal("0") : payMoney;
+            }
+            BigDecimal data[][] = { orderPayData };
+            result.put("data", data);
+        } else {
+            BigDecimal[] orderCountData = {new BigDecimal("0"), new BigDecimal("0"), new BigDecimal("0"), new BigDecimal("0"), new BigDecimal("0"), new BigDecimal("0"), new BigDecimal("0")};
+            BigDecimal[] userCountData = {new BigDecimal("0"), new BigDecimal("0"), new BigDecimal("0"), new BigDecimal("0"), new BigDecimal("0"), new BigDecimal("0"), new BigDecimal("0")};
+
+            for (int i = 0; i < 7; i++) {
+                Date beginTime = DateUtil.getDayBegin((6 - i));
+                Date endTime = DateUtil.getDayEnd((6 - i));
+                orderCountData[i] = orderService.getOrderCount(merchantId, storeId, beginTime, endTime);
+                Long userCount = memberService.getActiveUserCount(merchantId, storeId, beginTime, endTime);
+                userCountData[i] = new BigDecimal(userCount);
+            }
+            BigDecimal data[][] = { orderCountData, userCountData };
+            result.put("data", data);
+        }
+
+        result.put("labels", days);
         return result;
     }
 

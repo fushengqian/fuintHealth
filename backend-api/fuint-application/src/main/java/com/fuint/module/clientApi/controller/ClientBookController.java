@@ -154,21 +154,17 @@ public class ClientBookController extends BaseController {
     @ApiOperation(value = "预约提交")
     @RequestMapping(value = "/submit", method = RequestMethod.POST)
     @CrossOrigin
-    public ResponseObject submit(HttpServletRequest request, @RequestBody Map<String, Object> param) throws BusinessCheckException, ParseException {
+    public ResponseObject submit(HttpServletRequest request, @RequestBody BookSubmitParam param) throws BusinessCheckException, ParseException {
         Integer storeId = StringUtil.isEmpty(request.getHeader("storeId")) ? 0 : Integer.parseInt(request.getHeader("storeId"));
-        String bookId = param.get("bookId") == null ? "" : param.get("bookId").toString();
-        String orderGoodsId = param.get("orderGoodsId") == null ? "" : param.get("orderGoodsId").toString();
-        String remark = param.get("remark") == null ? "" : param.get("remark").toString();
-        String mobile = param.get("mobile") == null ? "" : param.get("mobile").toString();
-        String contact = param.get("contact") == null ? "" : param.get("contact").toString();
-        String date = param.get("date") == null ? "" : param.get("date").toString();
-        String time = param.get("time") == null ? "" : param.get("time").toString();
+        String bookId = param.getBookId() == null ? "" : param.getBookId();
+        String orderGoodsId = param.getOrderGoodsId() == null ? "" : param.getOrderGoodsId();
+        String remark = param.getRemark() == null ? "" : param.getRemark();
+        String mobile = param.getMobile() == null ? "" : param.getMobile();
+        String contact = param.getContact() == null ? "" : param.getContact();
+        String date = param.getDate() == null ? "" : param.getDate();
+        String time = param.getTime() == null ? "" : param.getTime();
 
         UserInfo loginInfo = TokenUtil.getUserInfo();
-        if (null == loginInfo) {
-            return getFailureResult(1001);
-        }
-
         MtUser mtUser = memberService.queryMemberById(loginInfo.getId());
         BookDto bookInfo = bookService.getBookById(Integer.parseInt(bookId), true);
         if (bookInfo == null) {

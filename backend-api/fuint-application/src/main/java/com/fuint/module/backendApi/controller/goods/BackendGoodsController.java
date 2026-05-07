@@ -151,11 +151,7 @@ public class BackendGoodsController extends BaseController {
             return getFailureResult(201, "该商品不存在");
         }
 
-        if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0 && !mtGoods.getMerchantId().equals(accountInfo.getMerchantId())) {
-            return getFailureResult(1004);
-        }
-
-        goodsService.updateStatus(goodsId, status, accountInfo.getAccountName());
+        goodsService.updateStatus(goodsId, status, accountInfo);
         logger.info("更新商品状态, goodsId = {},account = {}", goodsId, accountInfo.getAccountName());
 
         return getSuccessResult(true);
@@ -236,19 +232,7 @@ public class BackendGoodsController extends BaseController {
             }
         }
 
-        result.put("specData", specArr);
-        result.put("skuData", skuArr);
-
-        Map<String, Object> param = new HashMap<>();
-        param.put("status", StatusEnum.ENABLED.getKey());
-        if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
-            param.put("merchantId", accountInfo.getMerchantId());
-        }
         List<MtGoodsCate> cateList = cateService.getCateList(accountInfo.getMerchantId(), storeId, null, StatusEnum.ENABLED.getKey());
-        result.put("cateList", cateList);
-
-        String imagePath = settingService.getUploadBasePath();
-        result.put("imagePath", imagePath);
 
         // 店铺列表
         List<MtStore> storeList = storeService.getMyStoreList(accountInfo.getMerchantId(), accountInfo.getStoreId(), StatusEnum.ENABLED.getKey());
@@ -259,10 +243,16 @@ public class BackendGoodsController extends BaseController {
         // 预约项目
         List<MtBook> bookList = bookService.getBookList(accountInfo.getMerchantId(), storeId);
 
+        String imagePath = settingService.getUploadBasePath();
+
+        result.put("specData", specArr);
+        result.put("skuData", skuArr);
         result.put("typeList", typeList);
         result.put("storeId", storeId);
         result.put("storeList", storeList);
         result.put("bookList", bookList);
+        result.put("cateList", cateList);
+        result.put("imagePath", imagePath);
 
         return getSuccessResult(result);
     }
