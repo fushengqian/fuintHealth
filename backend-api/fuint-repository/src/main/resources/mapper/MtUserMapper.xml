@@ -84,7 +84,7 @@
             AND u.MERCHANT_ID = #{merchantId}
         </if>
         <if test="storeId != null and storeId > 0">
-            AND u.STORE_ID = #{storeId}
+            AND o.STORE_ID = #{storeId}
         </if>
         <if test="startTime != null">
             AND o.CREATE_TIME &gt;= #{startTime}

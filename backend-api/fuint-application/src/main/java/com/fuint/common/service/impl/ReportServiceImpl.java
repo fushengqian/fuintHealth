@@ -74,8 +74,8 @@ public class ReportServiceImpl implements ReportService {
         Date startTime = StringUtil.isNotEmpty(begin) ? DateUtil.parseDate(begin) : null;
         Date endTime = StringUtil.isNotEmpty(end) ? DateUtil.parseDate(end) : null;
 
+        // 总会员数量
         Long totalUserCount = memberService.getUserCount(merchantId, storeId);
-
         // 新增会员数量
         Long userCount = memberService.getUserCount(merchantId, storeId, startTime, endTime);
 

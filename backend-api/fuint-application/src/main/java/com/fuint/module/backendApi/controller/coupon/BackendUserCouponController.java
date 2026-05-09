@@ -1,8 +1,8 @@
 package com.fuint.module.backendApi.controller.coupon;
 
 import com.fuint.common.Constants;
-import com.fuint.common.dto.system.AccountInfo;
 import com.fuint.common.dto.common.ParamDto;
+import com.fuint.common.dto.system.AccountInfo;
 import com.fuint.common.enums.CouponTypeEnum;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.enums.UserCouponStatusEnum;
@@ -20,7 +20,6 @@ import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.framework.web.BaseController;
 import com.fuint.framework.web.ResponseObject;
 import com.fuint.repository.mapper.MtSendLogMapper;
-import com.fuint.repository.mapper.MtUserCouponMapper;
 import com.fuint.repository.model.MtCoupon;
 import com.fuint.repository.model.MtSendLog;
 import com.fuint.repository.model.MtStore;
@@ -58,8 +57,6 @@ import static com.fuint.common.util.XlsUtil.objectConvertToString;
 public class BackendUserCouponController extends BaseController {
 
     private static final Logger logger = LoggerFactory.getLogger(BackendUserCouponController.class);
-
-    private MtUserCouponMapper mtUserCouponMapper;
 
     private MtSendLogMapper mtSendLogMapper;
 
