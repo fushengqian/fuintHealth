@@ -485,6 +485,12 @@
                 "style": {
                   "navigationBarTitleText": "售后更新"
                 }
+             },
+             {
+               "path": "data/index",
+               "style": {
+                  "navigationBarTitleText": "统计数据"
+                }
              }
       ]
   }],

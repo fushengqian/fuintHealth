@@ -193,6 +193,9 @@ public class StaffServiceImpl extends ServiceImpl<MtStaffMapper, MtStaff> implem
             }
         } else {
             mtUser.setIsStaff(YesOrNoEnum.YES.getKey());
+            if (mtStaff.getAuditedStatus().equals(StatusEnum.ENABLED.getKey())) {
+                mtUser.setMobile(mtStaff.getMobile());
+            }
             mtUser.setOperator(accountInfo.getAccountName());
             memberService.updateMember(mtUser, false);
         }

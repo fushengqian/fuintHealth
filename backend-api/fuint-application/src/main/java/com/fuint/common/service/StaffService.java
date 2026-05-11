@@ -30,12 +30,12 @@ public interface StaffService extends IService<MtStaff> {
     /**
      * 保存员工信息
      *
-     * @param reqStaff 员工信息
+     * @param mtStaff 员工信息
      * @param accountInfo 操作人
      * @throws BusinessCheckException
      * @return
      */
-    MtStaff saveStaff(MtStaff reqStaff, AccountInfo accountInfo) throws BusinessCheckException;
+    MtStaff saveStaff(MtStaff mtStaff, AccountInfo accountInfo) throws BusinessCheckException;
 
     /**
      * 根据ID获取店铺信息
