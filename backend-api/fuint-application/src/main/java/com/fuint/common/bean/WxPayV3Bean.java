@@ -1,7 +1,6 @@
 package com.fuint.common.bean;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 import lombok.Data;
 
@@ -12,7 +11,6 @@ import lombok.Data;
  * CopyRight https://www.fuint.cn
  */
 @Component
-@PropertySource("file:${env.properties.path}/${env.profile}/application.properties")
 @ConfigurationProperties(prefix = "v3")
 @Data
 public class WxPayV3Bean {
