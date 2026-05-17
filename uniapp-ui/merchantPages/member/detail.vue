@@ -36,6 +36,9 @@
         <view class="no" v-if="userInfo.userNo">会员号：{{ userInfo.userNo ? userInfo.userNo : '-'}}</view>
         <view class="time">{{ userInfo.createTime | timeFormat('yyyy-mm-dd hh:MM') }}</view>
       </view>
+      <view class="export-btn" v-if="isLogin" @click="exportHealthReport">
+        <text class="btn-text">导出健康报告</text>
+      </view>
     </view>
 
     <!-- 会员资产 -->
@@ -267,6 +270,33 @@
           const app = this;
           console.log(app.userCode)
           app.$navTo(url + '?memberId=' + app.memberId + '&code=' + app.userCode);
+      },
+
+      // 导出健康报告
+      exportHealthReport() {
+        const app = this;
+        uni.showLoading({ title: '正在生成报告...' });
+        MemberApi.exportHealthReport(app.memberId)
+          .then(tempFilePath => {
+            uni.hideLoading();
+            uni.openDocument({
+              filePath: tempFilePath,
+              fileType: 'pdf',
+              showMenu: true,
+              success: (res) => {
+                console.log('打开文档成功', res);
+              },
+              fail: (err) => {
+                console.error('打开文档失败', err);
+                uni.showToast({ title: '打开文档失败', icon: 'none' });
+              }
+            });
+          })
+          .catch(err => {
+            uni.hideLoading();
+            console.error('导出失败', err);
+            uni.showToast({ title: '导出失败，请稍后重试', icon: 'none' });
+          });
       }
     },
 
@@ -403,6 +433,20 @@
             margin-right: 20rpx;
             color: #f5f5f5;
             float: right;
+        }
+    }
+    .export-btn {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 20rpx 20rpx 0rpx 20rpx;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 8rpx;
+        padding: 16rpx 0;
+        .btn-text {
+            color: #ffffff;
+            font-size: 28rpx;
+            font-weight: bold;
         }
     }
   }
