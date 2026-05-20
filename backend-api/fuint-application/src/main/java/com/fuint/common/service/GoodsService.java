@@ -130,7 +130,7 @@ public interface GoodsService {
      * @param params 查询参数
      * @return
      */
-    PaginationResponse<GoodsDto> selectGoodsList(Map<String, Object> params) throws BusinessCheckException;
+    PaginationResponse<GoodsDto> selectGoodsList(Map<String, Object> params);
 
     /**
      * 获取商品销售排行榜

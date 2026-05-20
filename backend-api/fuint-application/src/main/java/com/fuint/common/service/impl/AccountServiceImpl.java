@@ -113,20 +113,20 @@ public class AccountServiceImpl extends ServiceImpl<TAccountMapper, TAccount> im
         List<AccountDto> dataList = new ArrayList<>();
 
         for (TAccount tAccount : accountList) {
-             AccountDto accountDto = new AccountDto();
-             BeanUtils.copyProperties(tAccount, accountDto);
-             accountDto.setId(tAccount.getAcctId());
-             MtMerchant mtMerchant = mtMerchantMapper.selectById(tAccount.getMerchantId());
-             if (mtMerchant != null) {
-                 accountDto.setMerchantName(mtMerchant.getName());
-             }
-             MtStore mtStore = mtStoreMapper.selectById(tAccount.getStoreId());
-             if (mtStore != null) {
-                 accountDto.setStoreName(mtStore.getName());
-             }
-             accountDto.setSalt(null);
-             accountDto.setPassword(null);
-             dataList.add(accountDto);
+            AccountDto accountDto = new AccountDto();
+            BeanUtils.copyProperties(tAccount, accountDto);
+            accountDto.setId(tAccount.getAcctId());
+            MtMerchant mtMerchant = mtMerchantMapper.selectById(tAccount.getMerchantId());
+            if (mtMerchant != null) {
+                accountDto.setMerchantName(mtMerchant.getName());
+            }
+            MtStore mtStore = mtStoreMapper.selectById(tAccount.getStoreId());
+            if (mtStore != null) {
+                accountDto.setStoreName(mtStore.getName());
+            }
+            accountDto.setSalt(null);
+            accountDto.setPassword(null);
+            dataList.add(accountDto);
         }
 
         PageRequest pageRequest = PageRequest.of(accountPage.getPage(), accountPage.getPageSize());
@@ -160,8 +160,7 @@ public class AccountServiceImpl extends ServiceImpl<TAccountMapper, TAccount> im
             accountInfo.setRoleIds(account.getRoleIds());
             accountInfo.setStaffId(account.getStaffId());
             accountInfo.setStoreId(account.getStoreId());
-            Integer merchantId = account.getMerchantId() == null ? 0 : account.getMerchantId();
-            accountInfo.setMerchantId(merchantId);
+            accountInfo.setMerchantId(account.getMerchantId());
             if (account.getMerchantId() != null && account.getMerchantId() > 0) {
                 MtMerchant mtMerchant = mtMerchantMapper.selectById(account.getMerchantId());
                 if (mtMerchant != null) {
@@ -199,7 +198,7 @@ public class AccountServiceImpl extends ServiceImpl<TAccountMapper, TAccount> im
      * */
     @Override
     @OperationServiceLog(description = "新增后台账户")
-    public TAccount createAccountInfo(TAccount tAccount, List<TDuty> duties) throws BusinessCheckException {
+    public TAccount createAccountInfo(TAccount tAccount, List<TDuty> duties) {
         TAccount account = new TAccount();
         account.setAccountKey(tAccount.getAccountKey());
         account.setAccountName(tAccount.getAccountName().toLowerCase());
@@ -301,11 +300,20 @@ public class AccountServiceImpl extends ServiceImpl<TAccountMapper, TAccount> im
      * 更新账户
      *
      * @param tAccount
+     * @param accountInfo
+     * @throws BusinessCheckException
+     * @return
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     @OperationServiceLog(description = "修改后台账户")
-    public void updateAccount(TAccount tAccount) {
+    public void updateAccount(TAccount tAccount, AccountInfo accountInfo) throws BusinessCheckException {
+        if (tAccount == null || accountInfo == null) {
+            throw new BusinessCheckException("该账号不存在");
+        }
+        if (accountInfo.getMerchantId() > 0 && !accountInfo.getMerchantId().equals(tAccount.getMerchantId())) {
+            throw new BusinessCheckException("不同商户，无操作权限");
+        }
         tAccountMapper.updateById(tAccount);
     }
 
@@ -313,13 +321,21 @@ public class AccountServiceImpl extends ServiceImpl<TAccountMapper, TAccount> im
      * 删除账号
      *
      * @param accountId 账号ID
+     * @throws BusinessCheckException
      * @return
      * */
     @Override
     @Transactional(rollbackFor = Exception.class)
     @OperationServiceLog(description = "删除后台账户")
-    public void deleteAccount(Long accountId) {
+    public void deleteAccount(Long accountId, AccountInfo accountInfo) throws BusinessCheckException {
         TAccount tAccount = tAccountMapper.selectById(accountId);
+        if (tAccount == null) {
+            throw new BusinessCheckException("该账号不存在");
+        }
+        if (accountInfo.getMerchantId() > 0 && !accountInfo.getMerchantId().equals(tAccount.getMerchantId())) {
+            throw new BusinessCheckException("不同商户，无操作权限");
+        }
+
         tAccount.setAccountStatus(-1);
         tAccount.setModifyDate(new Date());
         tAccountMapper.updateById(tAccount);

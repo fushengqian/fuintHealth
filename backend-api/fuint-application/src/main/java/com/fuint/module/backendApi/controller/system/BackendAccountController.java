@@ -23,7 +23,6 @@ import com.fuint.utils.StringUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.BeanUtils;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -97,16 +96,24 @@ public class BackendAccountController extends BaseController {
         List<RoleDto> roles = new ArrayList<>();
         if (roleList.size() > 0) {
             for (TDuty duty : roleList) {
-                 RoleDto role = new RoleDto();
-                 role.setId(duty.getDutyId().longValue());
-                 role.setName(duty.getDutyName());
-                 role.setStatus(duty.getStatus());
-                 roles.add(role);
+                RoleDto roleDto = new RoleDto();
+                roleDto.setId(duty.getDutyId().longValue());
+                roleDto.setName(duty.getDutyName());
+                roleDto.setStatus(duty.getStatus());
+                roles.add(roleDto);
             }
         }
         result.put("roles", roles);
 
-        List<MtStore> stores = storeService.getMyStoreList(accountInfo.getMerchantId(),accountInfo.getStoreId(), StatusEnum.ENABLED.getKey());
+        Map<String, Object> params = new HashMap<>();
+        params.put("status", StatusEnum.ENABLED.getKey());
+        if (accountInfo.getStoreId() != null && accountInfo.getStoreId() > 0) {
+            params.put("storeId", accountInfo.getStoreId());
+        }
+        if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
+            params.put("merchantId", accountInfo.getMerchantId());
+        }
+        List<MtStore> stores = storeService.getMyStoreList(accountInfo.getMerchantId(), accountInfo.getStoreId(), StatusEnum.ENABLED.getKey());
         result.put("stores", stores);
 
         List<MtMerchant> merchants = merchantService.getMyMerchantList(accountInfo.getMerchantId(), accountInfo.getStoreId(), StatusEnum.ENABLED.getKey());
@@ -117,14 +124,24 @@ public class BackendAccountController extends BaseController {
             TAccount tAccount = tAccountService.getAccountInfoById(userId.intValue());
             accountDto = new AccountDto();
             accountDto.setId(tAccount.getAcctId());
-            BeanUtils.copyProperties(tAccount, accountDto);
-            if (tAccount.getStoreId() != null && tAccount.getStoreId() > 0) {
+            accountDto.setAccountKey(tAccount.getAccountKey());
+            accountDto.setAccountName(tAccount.getAccountName());
+            accountDto.setAccountStatus(tAccount.getAccountStatus());
+            accountDto.setCreateDate(tAccount.getCreateDate());
+            accountDto.setRealName(tAccount.getRealName());
+            accountDto.setModifyDate(tAccount.getModifyDate());
+            accountDto.setStaffId(tAccount.getStaffId());
+            accountDto.setMerchantId(tAccount.getMerchantId());
+            if (tAccount.getStoreId() > 0) {
+                accountDto.setStoreId(tAccount.getStoreId());
+            }
+            if (tAccount.getStoreId() > 0) {
                 MtStore mtStore = storeService.queryStoreById(tAccount.getStoreId());
                 if (mtStore != null) {
                     accountDto.setStoreName(mtStore.getName());
                 }
             }
-            if (tAccount.getAcctId() != null) {
+            if (tAccount != null) {
                 List<Long> roleIds = tAccountService.getRoleIdsByAccountId(tAccount.getAcctId());
                 result.put("roleIds", roleIds);
             }
@@ -219,7 +236,6 @@ public class BackendAccountController extends BaseController {
         if (loginAccount.getMerchantId() > 0 && !tAccount.getMerchantId().equals(loginAccount.getMerchantId())) {
             return getFailureResult(1004);
         }
-
         tAccount.setAcctId(id.intValue());
         tAccount.setRealName(realName);
 
@@ -268,7 +284,7 @@ public class BackendAccountController extends BaseController {
     @RequestMapping(value = "/delete/{userIds}", method = RequestMethod.GET)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('system:account:delete')")
-    public ResponseObject deleteAccount(@PathVariable("userIds") String userIds) {
+    public ResponseObject deleteAccount(@PathVariable("userIds") String userIds) throws BusinessCheckException {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
         String ids[] = userIds.split(",");
         if (ids.length > 0) {
@@ -287,7 +303,7 @@ public class BackendAccountController extends BaseController {
             for (int i = 0; i < ids.length; i++) {
                  if (StringUtil.isNotEmpty(ids[i])) {
                      Long userId = Long.parseLong(ids[i]);
-                     tAccountService.deleteAccount(userId);
+                     tAccountService.deleteAccount(userId, accountInfo);
                  }
             }
         }
@@ -307,15 +323,8 @@ public class BackendAccountController extends BaseController {
 
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
         TAccount tAccount = tAccountService.getAccountInfoById(userId.intValue());
-        if (tAccount == null || accountInfo == null) {
-            return getFailureResult(201, "账户不存在");
-        }
-        if (!tAccount.getMerchantId().equals(accountInfo.getMerchantId())) {
-            return getFailureResult(1004);
-        }
-
         tAccount.setAccountStatus(status);
-        tAccountService.updateAccount(tAccount);
+        tAccountService.updateAccount(tAccount, accountInfo);
 
         return getSuccessResult(true);
     }
@@ -327,22 +336,15 @@ public class BackendAccountController extends BaseController {
     @RequestMapping(value = "/resetPwd", method = RequestMethod.POST)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('system:account:edit')")
-    public ResponseObject resetPwd(@RequestBody Map<String, Object> param) {
+    public ResponseObject resetPwd(@RequestBody Map<String, Object> param) throws BusinessCheckException {
         Integer userId = param.get("userId") == null ? 0 : Integer.parseInt(param.get("userId").toString());
         String password = param.get("password") == null ? "" : param.get("password").toString();
 
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
         TAccount tAccount = tAccountService.getAccountInfoById(userId.intValue());
-        if (accountInfo.getMerchantId() > 0 && !accountInfo.getMerchantId().equals(tAccount.getMerchantId())) {
-            return getFailureResult(1004);
-        }
-
         tAccount.setPassword(password);
-
-        if (tAccount != null) {
-            tAccountService.entryptPassword(tAccount);
-            tAccountService.updateAccount(tAccount);
-        }
+        tAccountService.entryptPassword(tAccount);
+        tAccountService.updateAccount(tAccount, accountInfo);
 
         return getSuccessResult(true);
     }

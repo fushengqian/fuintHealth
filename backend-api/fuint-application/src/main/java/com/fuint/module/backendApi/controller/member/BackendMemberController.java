@@ -82,6 +82,16 @@ public class BackendMemberController extends BaseController {
     private UserGradeService userGradeService;
 
     /**
+     * 会员标签服务接口
+     **/
+    private UserTagService userTagService;
+
+    /**
+     * 会员标签关联服务接口
+     **/
+    private UserTagRelationService userTagRelationService;
+
+    /**
      * 查询会员列表
      */
     @ApiOperation(value = "查询会员列表")
@@ -96,7 +106,7 @@ public class BackendMemberController extends BaseController {
         PaginationResponse<UserDto> paginationResponse = memberService.queryMemberListByPagination(memberPage);
 
         // 会员等级列表
-        List<MtUserGrade> userGradeList = userGradeService.getMerchantGradeList(accountInfo.getMerchantId(), null);
+        List<MtUserGrade> userGradeList = userGradeService.getMerchantGradeList(accountInfo.getMerchantId(), StatusEnum.ENABLED.getKey());
 
         // 店铺列表
         List<MtStore> storeList = storeService.getMyStoreList(accountInfo.getMerchantId(), 0, StatusEnum.ENABLED.getKey());
@@ -210,6 +220,21 @@ public class BackendMemberController extends BaseController {
             }
             memberService.updateMember(mtUser, false);
         }
+        // 保存会员标签
+        String tagIds = memberInfo.getTagIds();
+        if (mtUser.getId() != null && mtUser.getId() > 0) {
+            if (StringUtil.isNotEmpty(tagIds)) {
+                List<Integer> tagIdList = new ArrayList<>();
+                for (String tagId : tagIds.split(",")) {
+                    if (StringUtil.isNotEmpty(tagId)) {
+                        tagIdList.add(Integer.parseInt(tagId.trim()));
+                    }
+                }
+                userTagRelationService.setUserTags(mtUser.getId(), tagIdList, accountInfo.getAccountName());
+            } else {
+                userTagRelationService.setUserTags(mtUser.getId(), new ArrayList<>(), accountInfo.getAccountName());
+            }
+        }
         return getSuccessResult(true);
     }
 
@@ -237,8 +262,8 @@ public class BackendMemberController extends BaseController {
             userDto.setGroupInfo(userGroupDto);
         }
         userDto.setMobile(CommonUtil.hidePhone(userDto.getMobile()));
-        List<UserTagDto> userTags = new ArrayList<>();
-        userDto.setUserTags(userTags);
+        Map<Integer, List<UserTagDto>> userTagMap = userTagService.getUserTagsByUserIds(mtUser.getMerchantId(), Arrays.asList(userDto.getId()));
+        userDto.setTags(userTagMap.get(userDto.getId()));
 
         List<MtUserGrade> userGradeList = userGradeService.getMerchantGradeList(accountInfo.getMerchantId(), null);
         Map<String, Object> result = new HashMap<>();

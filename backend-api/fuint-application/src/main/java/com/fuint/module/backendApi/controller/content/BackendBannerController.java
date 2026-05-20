@@ -89,21 +89,11 @@ public class BackendBannerController extends BaseController {
         String status = params.getStatus() != null ? params.getStatus() : StatusEnum.ENABLED.getKey();
 
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
-        MtBanner mtBanner = bannerService.queryBannerById(params.getId());
-        if (mtBanner == null) {
-            return getFailureResult(201, "该数据不存在");
-        }
-        if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
-            if (!mtBanner.getMerchantId().equals(accountInfo.getMerchantId())) {
-                return getFailureResult(1004);
-            }
-        }
-
         BannerDto bannerDto = new BannerDto();
         bannerDto.setOperator(accountInfo.getAccountName());
         bannerDto.setId(params.getId());
         bannerDto.setStatus(status);
-        bannerService.updateBanner(bannerDto);
+        bannerService.updateBanner(bannerDto, accountInfo);
 
         return getSuccessResult(true);
     }
@@ -125,16 +115,7 @@ public class BackendBannerController extends BaseController {
             bannerDto.setStoreId(accountInfo.getStoreId());
         }
         if (bannerDto.getId() != null && bannerDto.getId() > 0) {
-            MtBanner mtBanner = bannerService.queryBannerById(bannerDto.getId());
-            if (mtBanner == null) {
-                return getFailureResult(201, "该数据不存在");
-            }
-            if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
-                if (!mtBanner.getMerchantId().equals(accountInfo.getMerchantId())) {
-                    return getFailureResult(1004);
-                }
-            }
-            bannerService.updateBanner(bannerDto);
+            bannerService.updateBanner(bannerDto, accountInfo);
         } else {
             bannerService.addBanner(bannerDto);
         }
@@ -150,9 +131,7 @@ public class BackendBannerController extends BaseController {
     @PreAuthorize("@pms.hasPermission('content:banner:list')")
     public ResponseObject info(@PathVariable("id") Integer id) throws BusinessCheckException {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
-
         MtBanner bannerInfo = bannerService.queryBannerById(id);
-        String imagePath = settingService.getUploadBasePath();
 
         if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
             if (!bannerInfo.getMerchantId().equals(accountInfo.getMerchantId())) {
@@ -162,7 +141,7 @@ public class BackendBannerController extends BaseController {
 
         Map<String, Object> result = new HashMap<>();
         result.put("bannerInfo", bannerInfo);
-        result.put("imagePath", imagePath);
+        result.put("imagePath", settingService.getUploadBasePath());
 
         return getSuccessResult(result);
     }

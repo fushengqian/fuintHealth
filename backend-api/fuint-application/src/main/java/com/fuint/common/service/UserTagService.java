@@ -1,11 +1,13 @@
 package com.fuint.common.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fuint.common.dto.member.UserTagDto;
 import com.fuint.common.dto.system.AccountInfo;
 import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.repository.model.MtUserTag;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 会员标签服务接口
@@ -25,24 +27,32 @@ public interface UserTagService extends IService<MtUserTag> {
     List<MtUserTag> getMerchantTagList(Integer merchantId, String status);
 
     /**
+     * 批量获取会员标签
+     *
+     * @param merchantId 商户ID
+     * @param userIds 会员ID列表
+     * @return Map<会员ID, 标签DTO列表>
+     */
+    Map<Integer, List<UserTagDto>> getUserTagsByUserIds(Integer merchantId, List<Integer> userIds);
+
+    /**
      * 添加标签
      *
      * @param mtUserTag 标签信息
-     * @param merchantId 当前商户ID
      * @return
      * @throws BusinessCheckException
      */
-    MtUserTag addTag(MtUserTag mtUserTag, Integer merchantId) throws BusinessCheckException;
+    MtUserTag addTag(MtUserTag mtUserTag) throws BusinessCheckException;
 
     /**
      * 编辑标签
      *
      * @param mtUserTag 标签信息
-     * @param merchantId 当前商户ID
-     * @return
+     * @param accountInfo 当前登录账号信息
      * @throws BusinessCheckException
+     * @return
      */
-    MtUserTag updateTag(MtUserTag mtUserTag, Integer merchantId) throws BusinessCheckException;
+    MtUserTag updateTag(MtUserTag mtUserTag, AccountInfo accountInfo) throws BusinessCheckException;
 
     /**
      * 删除标签

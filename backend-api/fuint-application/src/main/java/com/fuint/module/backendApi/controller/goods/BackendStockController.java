@@ -103,7 +103,7 @@ public class BackendStockController extends BaseController {
             return getFailureResult(201, "该数据不存在");
         }
 
-        stockService.delete(id, accountInfo.getAccountName());
+        stockService.delete(id, accountInfo);
         return getSuccessResult(true);
     }
 
@@ -134,8 +134,7 @@ public class BackendStockController extends BaseController {
         mtStock.setStatus(status);
         mtStock.setStoreId(storeId);
         mtStock.setType(type);
-        String operator = accountInfo.getAccountName();
-        mtStock.setOperator(operator);
+        mtStock.setOperator(accountInfo.getAccountName());
         stockService.addStock(mtStock, goodsList);
 
         return getSuccessResult(true);
