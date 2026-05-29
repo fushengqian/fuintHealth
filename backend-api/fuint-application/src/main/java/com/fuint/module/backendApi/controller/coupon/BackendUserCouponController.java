@@ -7,6 +7,7 @@ import com.fuint.common.enums.CouponTypeEnum;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.enums.UserCouponStatusEnum;
 import com.fuint.common.param.SendLogPage;
+import com.fuint.common.param.UserCouponPage;
 import com.fuint.common.service.CouponService;
 import com.fuint.common.service.SendLogService;
 import com.fuint.common.service.StoreService;
@@ -15,7 +16,6 @@ import com.fuint.common.util.DateUtil;
 import com.fuint.common.util.ExcelUtil;
 import com.fuint.common.util.TokenUtil;
 import com.fuint.framework.exception.BusinessCheckException;
-import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.framework.web.BaseController;
 import com.fuint.framework.web.ResponseObject;
@@ -200,36 +200,16 @@ public class BackendUserCouponController extends BaseController {
     @RequestMapping(value = "/exportList", method = RequestMethod.GET)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('coupon:userCoupon:index')")
-    public void exportList(HttpServletRequest request, HttpServletResponse response) {
-        String mobile = request.getParameter("mobile") == null ? "" : request.getParameter("mobile");
-        String userId = request.getParameter("userId") == null ? "" : request.getParameter("userId");
-        String couponId = request.getParameter("couponId") == null ? "" : request.getParameter("couponId");
-        String status = request.getParameter("status") == null ? "" : request.getParameter("status");
-        String userCouponId = request.getParameter("id") == null ? "" : request.getParameter("id");
-
+    public void exportList(HttpServletRequest request, HttpServletResponse response, @ModelAttribute UserCouponPage userCouponPage) {
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getParameter("token"));
         if (accountInfo == null) {
             logger.error("导出会员卡券失败：登录信息失效");
             return;
         }
 
-        Map<String, Object> searchParams = new HashMap<>();
-        if (StringUtil.isNotEmpty(userCouponId)) {
-            searchParams.put("userCouponId", userCouponId);
-        }
-        if (StringUtil.isNotEmpty(mobile)) {
-            searchParams.put("mobile", mobile);
-        }
-        if (StringUtil.isNotEmpty(userId)) {
-            searchParams.put("userId", userId);
-        }
-        if (StringUtil.isNotEmpty(couponId)) {
-            searchParams.put("couponId", couponId);
-        }
-        if (StringUtil.isNotEmpty(status)) {
-            searchParams.put("status", status);
-        }
-        PaginationResponse<MtUserCoupon> result = userCouponService.queryUserCouponListByPagination(new PaginationRequest(Constants.PAGE_NUMBER, Constants.ALL_ROWS, searchParams));
+        userCouponPage.setPage(1);
+        userCouponPage.setPageSize(Constants.MAX_ROWS);
+        PaginationResponse<MtUserCoupon> result = userCouponService.queryUserCouponListByPagination(userCouponPage);
 
         // excel标题
         String[] title = { "核销二维码", "卡券ID", "卡券名称", "会员手机号", "状态", "面额", "余额" };
@@ -267,6 +247,5 @@ public class BackendUserCouponController extends BaseController {
         ExcelUtil.setResponseHeader(response, fileName, wb);
 
         logger.info("导出会员卡券成功：accountInfo = {}", accountInfo.getAccountName());
-        return;
     }
 }

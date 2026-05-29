@@ -62,10 +62,9 @@ public class BackendUserTagRuleController extends BaseController {
     public ResponseObject save(@RequestBody MtUserTagRule rule) throws BusinessCheckException {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
         Integer merchantId = accountInfo.getMerchantId();
-        String operator = accountInfo != null ? accountInfo.getAccountName() : "";
 
         rule.setMerchantId(merchantId);
-        rule.setOperator(operator);
+        rule.setOperator(accountInfo.getAccountName());
 
         if (rule.getId() != null && rule.getId() > 0) {
             userTagRuleService.updateRule(rule, accountInfo);
