@@ -96,7 +96,9 @@ public class ClientGoodsController extends BaseController {
              }
              dto.setGoodsList(goodsArr);
              dto.setSort((goodsArr.size() > 0) ? 1 : 0);
-             result.add(dto);
+             if (goodsArr.size() > 0) {
+                 result.add(dto);
+             }
         }
         // 商品数量为0就排在后面
         Collections.sort(result, (p1, p2) -> Integer.compare(p2.getSort(), p1.getSort()));
@@ -112,7 +114,7 @@ public class ClientGoodsController extends BaseController {
     public ResponseObject list(HttpServletRequest request) throws BusinessCheckException {
         Integer storeId = StringUtil.isEmpty(request.getHeader("storeId")) ? 0 : Integer.parseInt(request.getHeader("storeId"));
         String platform = request.getHeader("platform") == null ? "" : request.getHeader("platform");
-        Map<String, Object> goodsData = goodsService.getStoreGoodsList(storeId, "", platform, 0,1, 200);
+        Map<String, Object> goodsData = goodsService.getStoreGoodsList(storeId, "", platform, 0,1, 300);
         return getSuccessResult(goodsData.get("goodsList"));
     }
 

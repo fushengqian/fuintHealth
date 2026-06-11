@@ -4,7 +4,6 @@
     "selectedColor": "#ff0000",
     "borderStyle": "black",
     "backgroundColor": "#ffffff",
-    "fontSize":"30rpx",
     "list": [{
       "pagePath": "pages/index/index",
       "iconPath": "static/tabbar/home.png",
@@ -299,7 +298,6 @@
       }
     }
   ],
-  // 分包策略
   "subPackages": [
       {
          "root": "subPages",
@@ -365,15 +363,33 @@
                  "navigationBarTitleText": "购买储值卡",
                  "enablePullDownRefresh": true
                }
-             },
-             {
-               "path": "prestore/detail",
-               "style": {
-                 "navigationBarTitleText": "储值卡详情",
-                 "enablePullDownRefresh": true
-               }
-             }
-        ]
+            },
+            {
+              "path": "prestore/detail",
+              "style": {
+                "navigationBarTitleText": "储值卡详情",
+                "enablePullDownRefresh": true
+              }
+            },
+            {
+              "path": "commission/statistics",
+              "style": {
+                "navigationBarTitleText": "佣金统计"
+              }
+            },
+            {
+              "path": "commission/invite",
+              "style": {
+                "navigationBarTitleText": "邀请明细"
+              }
+            },
+            {
+              "path": "commission/orders",
+              "style": {
+                "navigationBarTitleText": "佣金订单"
+              }
+            }
+       ]
       },
       {
          "root": "merchantPages",
@@ -419,6 +435,18 @@
                "style": {
                  "navigationBarTitleText": "订单列表"
                }
+             },
+             {
+             "path": "refund/index",
+             "style": {
+                 "navigationBarTitleText": "售后订单"
+              }
+             },
+             {
+             "path": "refund/update",
+             "style": {
+                "navigationBarTitleText": "售后更新"
+              }
              },
              {
                "path": "balance/recharge",
@@ -473,24 +501,12 @@
                "style": {
                  "navigationBarTitleText": "编辑员工"
                }
-             }, 
-             {
-               "path": "refund/index",
-               "style": {
-                 "navigationBarTitleText": "售后订单"
-                }
-             },
-             {
-               "path": "refund/update",
-                "style": {
-                  "navigationBarTitleText": "售后更新"
-                }
              },
              {
                "path": "data/index",
                "style": {
-                  "navigationBarTitleText": "统计数据"
-                }
+                 "navigationBarTitleText": "数据统计"
+               }
              }
       ]
   }],
