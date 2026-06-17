@@ -332,7 +332,8 @@
                 resolve(result);
             })
             .catch(err => {
-                console.log(err);
+                // 错误提示已由全局拦截器处理
+                reject(err);
             })
         })
       },
@@ -666,7 +667,7 @@
     
     // 提交按钮
     .flow-btn {
-      background: linear-gradient(to right, $fuint-theme, $fuint-theme);
+      background: linear-gradient(to right, $fuint-theme, $fuint-line);
       color: #fff;
       text-align: center;
       line-height: 92rpx;

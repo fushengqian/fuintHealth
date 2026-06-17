@@ -1,7 +1,7 @@
 <template>
   <view class="container p-bottom">
     <view class="flow-mode">
-        <selectSwitch :switchList="orderModeList" checked_bj_color="#00acac" @change="switchMode"/> 
+        <selectSwitch :switchList="orderModeList" checked_bj_color="#6d64c5" @change="switchMode"/> 
     </view>
     <!-- 快递配送：配送地址 -->
     <view @click="onSelectAddress" v-if="orderMode == false" class="flow-delivery">
@@ -111,7 +111,7 @@
         </view>
         <view class="flex-five dis-flex flex-x-end flex-y-center">
           <text class="points-money col-m">-￥{{ usePointAmount }}</text>
-          <u-switch v-model="isUsePoints" size="48" active-color="#00acac" @change="getCartList()"></u-switch>
+          <u-switch v-model="isUsePoints" size="48" active-color="#6d64c5" @change="getCartList()"></u-switch>
         </view>
       </view>
       <!-- 会员折扣 -->
@@ -547,7 +547,7 @@
           .catch(err => {
             if (err.result) {
                 const errData = err.result.data;
-                if (errData.isCreated) {
+                if (errData && errData.isCreated) {
                     app.navToOrderResult(errData.orderInfo.id);
                     return false;
                 }
