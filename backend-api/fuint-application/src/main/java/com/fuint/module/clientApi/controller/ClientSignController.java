@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -93,6 +94,8 @@ public class ClientSignController extends BaseController {
         JSONObject paramsObj = new JSONObject(param);
         logger.info("微信授权登录参数：{}", param);
         Integer merchantId = merchantService.getMerchantId(merchantNo);
+        // 校验商户是否已过期
+        merchantService.checkMerchantValid(merchantId);
         JSONObject userInfo = paramsObj.getJSONObject("userInfo");
         JSONObject loginInfo = weixinService.getWxProfile(merchantId, param.get("code").toString());
         if (loginInfo == null) {
@@ -151,6 +154,8 @@ public class ClientSignController extends BaseController {
         String platform = request.getHeader("platform") == null ? "" : request.getHeader("platform");
         String shareId = param.get("shareId") == null ? "0" : param.get("shareId").toString();
         Integer merchantId = merchantService.getMerchantId(merchantNo);
+        // 校验商户是否已过期
+        merchantService.checkMerchantValid(merchantId);
         JSONObject userInfo = weixinService.getWxOpenId(merchantId, param.get("code").toString());
         String ip = CommonUtil.getIPFromHttpRequest(request);
         if (userInfo == null) {
@@ -201,6 +206,9 @@ public class ClientSignController extends BaseController {
         String shareId = param.get("shareId") == null ? "0" : param.get("shareId").toString();
         Integer storeId = StringUtil.isEmpty(request.getHeader("storeId")) ? 0 : Integer.parseInt(request.getHeader("storeId"));
         String userAgent = request.getHeader("user-agent") == null ? "" : request.getHeader("user-agent");
+        Integer merchantId = merchantService.getMerchantId(merchantNo);
+        // 校验商户是否已过期
+        merchantService.checkMerchantValid(merchantId);
         String ip = CommonUtil.getIPFromHttpRequest(request);
         if (StringUtil.isEmpty(account)) {
             return getFailureResult(201,"用户名不能为空");
@@ -215,12 +223,6 @@ public class ClientSignController extends BaseController {
         if (!captchaVerify) {
             return getFailureResult(201,"图形验证码有误");
         }
-        Integer merchantId = merchantService.getMerchantId(merchantNo);
-        MtUser userData = memberService.queryMemberByName(merchantId, account);
-        if (userData != null) {
-            return getFailureResult(201,"该用户名已存在");
-        }
-
         MtUser mtUser = new MtUser();
         mtUser.setName(account);
         mtUser.setPassword(password);
@@ -231,8 +233,13 @@ public class ClientSignController extends BaseController {
         mtUser.setDescription("会员自行注册新账号");
         mtUser.setIsStaff(YesOrNoEnum.NO.getKey());
         mtUser.setIp(ip);
-        MtUser userInfo = memberService.addMember(mtUser, shareId);
 
+        MtUser mtUserExist = memberService.queryMemberByName(mtUser.getMerchantId(), mtUser.getName());
+        if (mtUserExist != null) {
+            return getFailureResult(201,"该用户名已存在");
+        }
+
+        MtUser userInfo = memberService.addMember(mtUser, shareId);
         if (userInfo != null) {
             String token = TokenUtil.generateToken(userAgent, userInfo.getId());
             UserInfo loginInfo = new UserInfo();
@@ -282,6 +289,8 @@ public class ClientSignController extends BaseController {
         TokenDto dto = new TokenDto();
         MtUser mtUser = null;
         Integer merchantId = merchantService.getMerchantId(merchantNo);
+        // 校验商户是否已过期
+        merchantService.checkMerchantValid(merchantId);
         // 方式1：通过短信验证码登录
         if (StringUtil.isNotEmpty(mobile) && StringUtil.isNotEmpty(verifyCode)) {
             // 如果已经登录，免输入验证码
