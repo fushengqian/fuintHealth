@@ -15,6 +15,7 @@
                   <!-- 商品图片 -->
                   <view class="goods-item_left">
                     <image class="image" lazy-load :lazy-load-margin="0" :src="dataItem.logo"></image>
+                    <view class="member-tag" v-if="dataItem.gradeIds" style="top:0;left:auto;right:0;padding:4rpx 12rpx;font-size:20rpx;color:#fff;background:linear-gradient(135deg,#d4a843,#b8860b);border-radius:0 0 0 12rpx;z-index:5;">会员专属</view>
                   </view>
                   <view class="goods-item_right">
                     <!-- 商品名称 -->
@@ -46,6 +47,7 @@
                     <!-- 商品图片 -->
                     <view class="goods-image">
                       <image class="image" lazy-load :lazy-load-margin="0" mode="aspectFill" :src="dataItem.logo"></image>
+                      <view class="member-tag" v-if="dataItem.gradeIds" style="top:0;left:auto;right:0;padding:4rpx 12rpx;font-size:20rpx;color:#fff;background:linear-gradient(135deg,#d4a843,#b8860b);border-radius:0 0 0 12rpx;z-index:5;">会员专属</view>
                     </view>
                     <view class="detail">
                       <!-- 商品标题 -->
@@ -228,6 +230,17 @@
                     object-fit: cover;
                     border-radius: 40rpx;
                   }
+                  .member-tag {
+                    position: absolute;
+                    top: 0;
+                    right: 0;
+                    padding: 4rpx 12rpx;
+                    font-size: 20rpx;
+                    color: #fff;
+                    background: linear-gradient(135deg, #d4a843, #b8860b);
+                    border-radius: 0 0 0 12rpx;
+                    z-index: 5;
+                  }
                 }
             }
 
@@ -321,6 +334,7 @@
             }
 
             .goods-item_left {
+              position: relative;
               display: flex;
               width: 40%;
               background: #fff;
@@ -331,6 +345,17 @@
                 width: 220rpx;
                 height: 200rpx;
                 border-radius: 10rpx;
+              }
+              .member-tag {
+                position: absolute;
+                top: 0;
+                right: 0;
+                padding: 4rpx 12rpx;
+                font-size: 20rpx;
+                color: #fff;
+                background: linear-gradient(135deg, #d4a843, #b8860b);
+                border-radius: 0 0 0 12rpx;
+                z-index: 5;
               }
             }
 

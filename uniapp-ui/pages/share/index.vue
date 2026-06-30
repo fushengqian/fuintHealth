@@ -326,7 +326,7 @@
   }
 
   .header-bg {
-    background: linear-gradient(135deg, #00acac, #008a8a);
+    background: linear-gradient(135deg, #6d64c5, #7450ab);
     padding: 40rpx 30rpx;
     position: relative;
     overflow: hidden;
@@ -454,7 +454,7 @@
           background: none;
         }
         .iconfont {
-          color: #00acac;
+          color: #6d64c5;
           font-size: 56rpx;
         }
       }

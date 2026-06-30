@@ -43,9 +43,9 @@
           <text v-else-if="order.status == OrderStatusEnum.REFUND.value">{{OrderStatusEnum.REFUND.name}}</text>
           <text v-else-if="order.status == OrderStatusEnum.COMPLETE.value">{{OrderStatusEnum.COMPLETE.name}}</text>
         </view>
-        <view class="verify-code" v-if="order.orderMode == 'oneself' && order.type == 'goods' && order.verifyCode && order.payStatus == 'B' && ( !['C', 'H', 'G'].includes(order.status))">
-            <view>核销码：</view>
-            <view class="code">{{ order.verifyCode }}</view>
+        <view class="verify-btn" v-if="order.orderMode == 'oneself' && order.type == 'goods' && order.verifyCode && order.payStatus == 'B' && ( !['C', 'H', 'G'].includes(order.status))" @click="handleShowVerifyPopup">
+          <u-icon name="scan" size="28" color="#333"></u-icon>
+          <text>核销码</text>
         </view>
       </view>
     </view>
@@ -87,7 +87,7 @@
         <view class="goods-main" v-if="goods.num > 0">
           <!-- 商品图片 -->
           <view class="goods-image" @click="handleTargetGoods(goods.goodsId, goods.type)">
-            <image class="image" :src="goods.image" mode="widthFix"></image>
+            <image class="image" :src="goods.image" mode="aspectFill"></image>
           </view>
           <!-- 商品信息 -->
           <view class="goods-content" @click="handleTargetGoods(goods.goodsId, goods.type)">
@@ -260,6 +260,24 @@
     
     <!-- 快捷导航 -->
     <shortcut/>
+
+    <!-- 核销二维码弹窗 -->
+    <u-popup v-model="showVerifyPopup" mode="center" border-radius="20" :closeable="true">
+      <view class="verify-popup">
+        <view class="popup-title">订单核销码</view>
+        <view class="popup-tip">请向店员出示二维码核销</view>
+        <view class="qr-code-box" v-if="qrCodeImage">
+          <image class="qr-image" :src="qrCodeImage" mode="aspectFit"></image>
+        </view>
+        <view class="code-text" v-if="verifyCode">
+          <text class="label">核销码：</text>
+          <text class="code">{{ verifyCode }}</text>
+        </view>
+        <view class="popup-close-btn" @click="showVerifyPopup = false">
+          <text>关闭</text>
+        </view>
+      </view>
+    </u-popup>
   </view>
 </template>
 
@@ -299,6 +317,10 @@
         setting: {},
         // 支付方式弹窗
         showPayPopup: false,
+        // 核销二维码弹窗
+        showVerifyPopup: false,
+        qrCodeImage: '',
+        verifyCode: '',
         // 刷新页面
         reflash: false
       }
@@ -331,6 +353,12 @@
             app.order = result.data
             app.setting = result.data
             app.isLoading = false
+            // 待核销订单自动弹出核销二维码
+            if (app.order.orderMode == 'oneself' && app.order.type == 'goods'
+                && app.order.verifyCode && app.order.payStatus == 'B'
+                && !['C', 'H', 'G'].includes(app.order.status)) {
+              app.getVerifyQrCode()
+            }
           })
       },
 
@@ -432,6 +460,29 @@
           .then(result => app.onSubmitCallback(result))
           .catch(err => err)
       },
+      
+      // 显示核销二维码弹窗
+      handleShowVerifyPopup() {
+        this.getVerifyQrCode();
+      },
+      
+      // 获取核销二维码
+      getVerifyQrCode() {
+        const app = this;
+        OrderApi.verifyQrCode(app.orderId)
+          .then(result => {
+            if (result.code === 200 && result.data) {
+              app.qrCodeImage = result.data.qrCode;
+              app.verifyCode = result.data.verifyCode;
+              app.showVerifyPopup = true;
+            } else {
+              app.$error(result.message || '获取核销码失败');
+            }
+          })
+          .catch(() => {
+            app.$error('获取核销码失败');
+          });
+      },
 
       // 订单提交成功后回调
       onSubmitCallback(result) {
@@ -498,6 +549,7 @@
     padding: 56rpx 30rpx 0 30rpx;
 
     .order-status {
+      flex: 1;
       display: flex;
       align-items: center;
       height: 128rpx;
@@ -516,15 +568,17 @@
         font-size: 38rpx;
         font-weight: bold;
       }
-      .verify-code {
-          color: #ffffff;
-          margin-left: 60rpx;
-          font-size: 30rpx;
-          .code {
-              font-size: 50rpx;
-              color: #ffd700;
-              font-weight: bold;
-          }
+      .verify-btn {
+        display: flex;
+        align-items: center;
+        margin-left: auto;
+        padding: 8rpx 24rpx;
+        font-size: 24rpx;
+        color: #333;
+        background: #fff;
+        border-radius: 28rpx;
+        font-weight: bold;
+        gap: 6rpx;
       }
     }
 
@@ -653,7 +707,8 @@
     // 商品项
     .goods-item {
       margin-bottom: 40rpx;
-
+      border-bottom: #f5f5f5 solid 5rpx;
+      padding-bottom: 20rpx;
       &:last-child {
         margin-bottom: 0;
       }
@@ -666,13 +721,15 @@
       // 商品图片
       .goods-image {
         width: 180rpx;
-        height: 180rpx;
+        height: 160rpx;
+        position: relative; 
 
         .image {
           display: block;
           width: 100%;
           height: 100%;
           border-radius: 8rpx;
+          object-fit: cover; 
         }
       }
 
@@ -919,6 +976,66 @@
           }
         }
       }
+    }
+  }
+
+  // 核销二维码弹窗
+  .verify-popup {
+    width: 500rpx;
+    padding: 40rpx 30rpx;
+    text-align: center;
+    
+    .popup-title {
+      font-size: 34rpx;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 16rpx;
+    }
+    
+    .popup-tip {
+      font-size: 24rpx;
+      color: #999;
+      margin-bottom: 30rpx;
+    }
+    
+    .qr-code-box {
+      width: 360rpx;
+      height: 360rpx;
+      margin: 0 auto 30rpx auto;
+      padding: 16rpx;
+      background: #fff;
+      border: 1rpx solid #eee;
+      border-radius: 12rpx;
+      
+      .qr-image {
+        width: 100%;
+        height: 100%;
+      }
+    }
+    
+    .code-text {
+      font-size: 28rpx;
+      color: #333;
+      margin-bottom: 30rpx;
+      
+      .label {
+        color: #666;
+      }
+      
+      .code {
+        color: $fuint-theme;
+        font-weight: bold;
+        font-size: 36rpx;
+      }
+    }
+    
+    .popup-close-btn {
+      padding: 16rpx 60rpx;
+      background: $fuint-theme;
+      color: #fff;
+      border-radius: 40rpx;
+      font-size: 28rpx;
+      display: inline-block;
     }
   }
 </style>

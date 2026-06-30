@@ -2,7 +2,7 @@
   <view class="container">
     <!--店铺切换-->
     <Location v-if="storeInfo" :storeInfo="storeInfo"/>
-    
+
     <!-- 搜索框 -->
     <Search tips="请输入搜索关键字..." @event="$navTo('pages/search/index')" />
 
@@ -19,10 +19,10 @@
       </scroll-view>
 
       <!-- 右侧 商品 -->
-      <scroll-view 
-        class="cate-right b-f" 
-        :scroll-top="scrollTop" 
-        :scroll-y="true" 
+      <scroll-view
+        class="cate-right b-f"
+        :scroll-top="scrollTop"
+        :scroll-y="true"
         :style="{ height: `${scrollHeight}px` }"
         @scroll="handleScroll"
         scroll-with-animation
@@ -33,20 +33,22 @@
             <view class="cate-two-box">
               <view v-if="list[curIndex].goodsList.length" class="cate-cont-box">
                 <!-- 为每个分类添加锚点和统一class -->
-                <view 
-                  v-for="(category, catIndex) in list" 
-                  :key="catIndex" 
-                  :id="`category-${catIndex}`" 
+                <view
+                  v-for="(category, catIndex) in list"
+                  :key="catIndex"
+                  :id="`category-${catIndex}`"
                   class="category-item"
                 >
                   <view class="category-title">{{category.name}}</view>
                   <view class="flex-five item" v-for="(item, idx) in category.goodsList" :key="idx">
                     <view class="cate-img">
                       <image v-if="item.logo" lazy-load :lazy-load-margin="0" :src="item.logo" @click="onTargetGoods(item.id)"></image>
+                      <view class="member-tag" v-if="item.gradeIds">会员专属</view>
                     </view>
                     <view class="cate-info">
                       <view class="base">
                         <text class="name text">{{ item.name }}</text>
+                        <text class="sale-point text" v-if="item.salePoint">{{ item.salePoint }}</text>
                         <text class="stock text">库存:{{ item.stock ? item.stock : 0 }} 已售:{{ item.initSale ? item.initSale : 0 }}</text>
                       </view>
                       <view class="action">
@@ -73,10 +75,10 @@
         </view>
       </scroll-view>
     </view>
-    
+
     <!-- 商品SKU弹窗 -->
     <SkuPopup v-if="!isLoading" v-model="showSkuPopup" :skuMode="skuMode" :goods="goods" @addCart="onAddCart"/>
-    
+
     <view class="flow-fixed-footer b-f m-top10">
       <view class="dis-flex chackout-box">
         <view class="chackout-left pl-12">
@@ -88,7 +90,7 @@
         </view>
       </view>
     </view>
-    
+
     <empty v-if="!list.length" :isLoading="isLoading" />
   </view>
 </template>
@@ -178,7 +180,7 @@
             app.goodsCart = result[1].data.list;
             setCartTotalNum(app.totalNum);
             setCartTabBadge();
-            
+
             // 数据加载完成后，计算分类位置
             this.$nextTick(() => {
               // 延迟计算以确保DOM渲染完成
@@ -199,7 +201,7 @@
                              total = total + cart.num
                              totalBuyNum = totalBuyNum + cart.num
                              app.totalPrice = app.totalPrice + (cart.goodsInfo.price * cart.num)
-                         } 
+                         }
                       })
                       app.$set(app.list[index].goodsList[key], 'buyNum', totalBuyNum)
                   })
@@ -207,19 +209,19 @@
               })
           })
       },
-      
+
       // 计算每个分类的位置信息（累积高度）
       calculateCategoryPositions() {
         const query = uni.createSelectorQuery().in(this);
         this.categoryPositions = [];
-        
+
         query.selectAll('.category-item').boundingClientRect();
-        
+
         query.exec(res => {
           if (res && res[0]) {
             const rects = res[0];
             let cumulativeHeight = 0;
-            
+
             rects.forEach((rect, index) => {
               if (rect) {
                 // 保存每个分类的起始位置（累积高度）
@@ -235,7 +237,7 @@
           }
         });
       },
-      
+
       // 滚动事件处理
       handleScroll(e) {
         if (this.isManualSelect) {
@@ -243,7 +245,7 @@
           this.isManualSelect = false;
           return;
         }
-        
+
         // 防抖处理
         clearTimeout(this.scrollTimer);
         this.scrollTimer = setTimeout(() => {
@@ -251,15 +253,15 @@
           this.updateActiveCategory(scrollTop);
         }, 50);
       },
-      
+
       // 根据滚动位置更新当前激活的分类
       updateActiveCategory(scrollTop) {
         if (!this.categoryPositions.length) return;
-        
+
         // 增加一个偏移量，使切换更平滑
         const offset = 200;
         const adjustedScrollTop = scrollTop + offset;
-        
+
         // 找到当前应该激活的分类
         let activeIndex = 0;
         for (let i = 0; i < this.categoryPositions.length; i++) {
@@ -270,13 +272,13 @@
                  break;
              }
         }
-        
+
         // 更新当前激活的分类
         if (this.curIndex !== activeIndex) {
             this.curIndex = activeIndex;
         }
       },
-      
+
       onGetStoreInfo() {
          const app = this
          settingApi.systemConfig()
@@ -284,7 +286,7 @@
                app.storeInfo = result.data.storeInfo;
            })
        },
-      
+
       onTargetGoods(goodsId) {
         this.$navTo(`pages/goods/detail`, { goodsId })
       },
@@ -302,27 +304,27 @@
       handleSelectNav(index) {
         this.isManualSelect = true;
         this.curIndex = index;
-        
+
         // 找到对应分类的位置
         const position = this.categoryPositions[index];
         console.log("categoryPositions === ", this.categoryPositions);
         if (position) {
           // 使用scrollTop实现精准滚动
           this.scrollTop = position.top;
-          
+
           // 同时使用scroll-into-view作为备用方案
           this.scrollIntoView = `category-${index}`;
-          
+
           // 短暂延迟后重置scrollIntoView
           setTimeout(() => {
             this.scrollIntoView = '';
           }, 500);
         }
-        
+
         // 防止快速点击导致的滚动问题
         clearTimeout(this.scrollTimer);
       },
-      
+
       onSaveCart(goodsId, action) {
         const app = this
         return new Promise((resolve, reject) => {
@@ -337,12 +339,12 @@
             })
         })
       },
-      
+
       onAddCart(total) {
         this.getPageData();
         this.$toast("添加购物车成功");
       },
-      
+
       doSubmit() {
         if (this.totalPrice > 0) {
             this.$navTo('pages/cart/index')
@@ -350,7 +352,7 @@
             this.$error("请先选择商品")
         }
       },
-      
+
       onShowSkuPopup(skuMode, goodsId) {
         const app = this
         app.isLoading = true
@@ -358,14 +360,14 @@
           GoodsApi.detail(goodsId)
             .then(result => {
               const goodsData = result.data
-              
+
               if (goodsData.skuList) {
                   goodsData.skuList.forEach(function(sku, index) {
                     goodsData.skuList[index].specIds = sku.specIds.split('-')
                     goodsData.skuList[index].skuId = sku.id
                   })
               }
-              
+
               app.goods = goodsData
               app.skuMode = skuMode
               app.showSkuPopup = !app.showSkuPopup
@@ -512,7 +514,7 @@
         border-radius: 3rpx;
         margin-bottom: 5rpx;
     }
-    
+
     .category-title {
       font-size: 32rpx;
       font-weight: bold;
@@ -523,8 +525,20 @@
   }
 
   .cate-cont-box .cate-img {
+    position: relative;
     padding: 13rpx 10rpx 4rpx 10rpx;
     display: block;
+    .member-tag {
+      position: absolute;
+      top: 13rpx;
+      left: 66rpx;
+      padding: 4rpx 12rpx;
+      font-size: 20rpx;
+      color: #fff;
+      background: linear-gradient(135deg, #d4a843, #b8860b);
+      border-radius: 0 0 0 12rpx;
+      z-index: 5;
+    }
   }
 
   .cate-cont-box .cate-img image {
@@ -561,6 +575,14 @@
             display: -webkit-box;
             -webkit-box-orient: vertical;
             -webkit-line-clamp: 2;
+        }
+        .sale-point {
+            margin-top: 4rpx;
+            font-size: 22rpx;
+            color: #e49a3d;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
         }
         .stock {
             margin-top: 10rpx;
@@ -631,7 +653,7 @@
     width: 100%;
     padding: 0 2px;
   }
-  
+
   // 底部操作栏
   .flow-fixed-footer {
     position: fixed;
@@ -659,15 +681,15 @@
           }
         }
     }
-    
+
     .chackout-right {
       font-size: 34rpx;
       flex: 2;
     }
-    
+
     // 提交按钮
     .flow-btn {
-      background: linear-gradient(to right, $fuint-theme, $fuint-line);
+      background: linear-gradient(to right, $fuint-theme, $fuint-theme);
       color: #fff;
       text-align: center;
       line-height: 92rpx;

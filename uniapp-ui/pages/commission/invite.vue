@@ -157,7 +157,7 @@
   }
 
   .tab-active {
-    color: #00acac;
+    color: #6d64c5;
     font-weight: bold;
     &::after {
       content: '';
@@ -167,7 +167,7 @@
       transform: translateX(-50%);
       width: 60rpx;
       height: 6rpx;
-      background: #00acac;
+      background: #6d64c5;
       border-radius: 3rpx;
     }
   }

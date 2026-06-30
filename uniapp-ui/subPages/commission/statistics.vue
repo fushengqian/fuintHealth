@@ -132,7 +132,7 @@
   /* 概览统计卡片 */
   .overview-card {
     margin: 20rpx;
-    background: linear-gradient(135deg, #00acac, #008a8a);
+    background: linear-gradient(135deg, #6d64c5, #7450ab);
     border-radius: 16rpx;
     padding: 30rpx;
     color: #fff;

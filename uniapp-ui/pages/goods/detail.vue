@@ -1,7 +1,10 @@
 <template>
   <view v-show="!isLoading" class="container">
     <!-- 商品图片轮播 -->
-    <SlideImage v-if="!isLoading" :images="goods.images" />
+    <view class="images-wrapper">
+      <SlideImage v-if="!isLoading" :images="goods.images" />
+      <view class="member-tag" v-if="!isLoading && goods.gradeIds" style="top:0;left:auto;right:0;padding:4rpx 12rpx;font-size:24rpx;color:#fff;background:linear-gradient(135deg,#d4a843,#b8860b);border-radius:0 0 0 12rpx;z-index:10;">会员专属</view>
+    </view>
 
     <!-- 商品信息 -->
     <view v-if="!isLoading" class="goods-info m-top20">
