@@ -1,9 +1,10 @@
 # fuint康养美业系统介绍
 
 #### 介绍
-fuint康养美业是一款专为美容、康养（如SPA、医美、美妆、中医馆、养生馆、健康管理等）美业行业设计的会员管理与营销一体化软件系统。提供会员管理、预约与排班、营销自动化、收银与财务管理、员工分佣绩效、多端协同等功能。具有优惠券、预存卡、实体卡、次卡、储值卡、电子券，会员积分体系，会员等级等营销功能。
+fuint康养美业是一款专为美容、康养（如SPA、医美、养生馆、健康管理等）行业设计的会员管理与营销一体化软件系统。提供会员管理、预约与排班、营销自动化、收银与财务管理、员工分佣绩效、多端协同等功能。
 以下是前台的页面展示：
 <p><img src="https://fuint-cn.oss-cn-shenzhen.aliyuncs.com/uploads/bcffc7615f38409c8f6182f7ff6d2a83.png" alt="前台页面1"></p>
+<p><img src="https://fuint-health.oss-cn-shenzhen.aliyuncs.com/static/g6.png" alt="美业会员端截图"></p>
 
 本系统侧重于线下实体店的私域流量的运营，同时提供会员端小程序和收银系统的线上线下统一渠道，帮助商户降低获客成本。顾客通过扫码支付成为私域流量，支付即可成为会员。积分和卡券功能建立起会员等级体系，通过消息推送和短信营销方便触达用户。
 <p>1、会员运营自动化：商家通过日常活动设置，如开卡礼设置，沉睡唤醒等，成为会员后自动给顾客送优惠券，让顾客更有黏性，提升会员运营效率。</p>
@@ -25,11 +26,11 @@ fuint康养美业是一款专为美容、康养（如SPA、医美、美妆、中
 前端：采用基于Vue的Uniapp、Element UI，前后端分离，支持微信小程序、h5等
 <p>后台截图：</p>
 <p><img src="https://fuint-cn.oss-cn-shenzhen.aliyuncs.com/uploads/cc331ab519f64be9bb0e198cab595b12.png" alt="登录界面"></p>
-
+<p><img src="https://fuint-health.oss-cn-shenzhen.aliyuncs.com/static/g4.png" alt="后台商品编辑截图"></p>
+<p><img src="https://fuint-health.oss-cn-shenzhen.aliyuncs.com/static/g5.png" alt="后台统计功能截图"></p>
 <p>收银系统：</p>
 代客下单和收银系统，支持余额、微信、支付宝等支付渠道，已对接好扫码枪、扫码盒子、云打印机，订单提交后自动打印小票。
 <p><img src="https://fuint-cn.oss-cn-shenzhen.aliyuncs.com/uploads/bdb4d01a0e984864b54cd641977053e8.png" alt="收银首页"></p>
-
 前端使用技术<br>
 2.1 Vue<br>
 2.2 Uniapp<br>
