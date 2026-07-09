@@ -31,7 +31,7 @@
                                 <text>{{ item.effectiveDate }}</text>
                               </view>
                               <view class="desc_footer">
-                                 <view v-if="item.type == 'C'"> 
+                                 <view v-if="item.type == 'C'">
                                     <text v-if="item.content == '1'" class="price_x">¥{{ item.amount }}</text>
                                     <text v-if="item.content == '2'" class="price_x">{{ (item.amount / 10).toFixed(2) }} 折</text>
                                  </view>
@@ -46,6 +46,13 @@
           </view>
       </view>
     </mescroll-body>
+    <!-- 领取入口 -->
+    <view class="footer-bar" @click="toReceiveMore">
+      <u-icon v-if="type == 'C'" name="coupon" size="28" color="#00acac"></u-icon>
+      <u-icon v-if="type == 'T'" name="clock" size="28" color="#00acac"></u-icon>
+      <u-icon v-if="type == 'P'" name="rmb-circle" size="28" color="#00acac"></u-icon>
+      <text>{{ type == 'C' ? '领券中心' : type == 'T' ? '领取计次卡' : '购买储值卡' }}</text>
+    </view>
   </view>
 </template>
 
@@ -55,9 +62,7 @@
   import { getEmptyPaginateObj, getMoreListData } from '@/utils/app'
   import * as MyCouponApi from '@/api/myCoupon'
   import { CouponTypeEnum } from '@/common/enum/coupon'
-  import Empty from '@/components/empty'
 
-  const color = ['red', 'blue', 'violet', 'yellow']
   const pageSize = 15
   const tabs = [{
     name: `未使用`,
@@ -72,16 +77,13 @@
 
   export default {
     components: {
-      MescrollBody,
-      Empty
+      MescrollBody
     },
     mixins: [MescrollMixin],
     data() {
       return {
         // 枚举类
         CouponTypeEnum,
-        // 颜色组
-        color,
         // 标签栏数据
         tabs,
         // 当前标签索引
@@ -92,8 +94,6 @@
         memberId: '',
         // 优惠券列表数据
         list: getEmptyPaginateObj(),
-        // 正在加载
-        isLoading: false,
         // 上拉加载配置
         upOption: {
           // 首次自动执行
@@ -121,14 +121,14 @@
            title: "会员" + CouponTypeEnum[type].name
        })
     },
-    
+
     onShow() {
       // 获取页面数据
       this.getCouponList(1);
     },
 
     methods: {
-        
+
       upCallback(page) {
         const app = this
         // 设置列表数据
@@ -140,12 +140,12 @@
           })
           .catch(() => app.mescroll.endErr())
       },
-      
+
       // 卡券详情
       onDetail(userCouponId, type) {
           const app = this
           if (app.memberId) {
-              app.$navTo('pages/confirm/doConfirm?id='+userCouponId)
+              app.$navTo('pages/confirm/doConfirm', { id: userCouponId })
               return false;
           }
           if (type === 'C') {
@@ -156,7 +156,12 @@
               app.$navTo(`subPages/prestore/detail`, { userCouponId });
           }
       },
-      
+
+      // 前往领取入口
+      toReceiveMore() {
+          this.$navTo('subPages/coupon/list', { type: this.type })
+      },
+
       /**
        * 获取卡券列表
        */
@@ -199,6 +204,22 @@
 </script>
 
 <style lang="scss" scoped>
+.footer-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18rpx 24rpx;
+  padding-bottom: calc(18rpx + env(safe-area-inset-bottom));
+  background: #fff;
+  border-top: 1rpx solid #f0f0f0;
+  font-size: 28rpx;
+  color: $fuint-theme;
+  gap: 8rpx;
+}
 .goods-list {
   padding: 4rpx;
   box-sizing: border-box;
@@ -207,7 +228,7 @@
     box-sizing: border-box;
     padding: 10rpx;
     height: 260rpx;
-    
+
   .goods-item_left {
     display: flex;
     width: 35%;
@@ -215,7 +236,7 @@
     background: #fff;
     padding: 20rpx;
     height: 244rpx;
-    
+
     .image {
       display: block;
       border-radius: 5rpx;
@@ -224,12 +245,12 @@
       border: solid 1rpx #cccccc;
     }
   }
-  
+
   .goods-item_right {
     position: relative;
     width: 65%;
     background: #fff;
-  
+
     .goods-name {
       margin-top: 45rpx;
       height: 45rpx;
@@ -239,7 +260,7 @@
       font-size: 30rpx;
     }
   }
-  
+
   .goods-item_desc {
     margin-top: 0rpx;
     .coupon-attr {
@@ -253,27 +274,27 @@
        }
     }
   }
-  
+
   .desc-selling_point {
     width: 400rpx;
     font-size: 24rpx;
     color: #e49a3d;
-  }  
+  }
   .desc-goods_sales {
     color: #999;
     font-size: 24rpx;
   }
-  
+
   .desc_footer {
     font-size: 24rpx;
-  
+
     .price_x {
       margin-right: 16rpx;
       color: #f03c3c;
       font-size: 30rpx;
       font-weight: bold;
     }
-  
+
     .price_y {
       text-decoration: line-through;
     }
@@ -289,7 +310,7 @@
    text-align: center;
    color: #fff;
    border-radius: 5rpx;
-   background: linear-gradient(to right, $fuint-theme, $fuint-theme);
+   background: linear-gradient(to right, $fuint-theme, $fuint-line);
  }
 }
 </style>
