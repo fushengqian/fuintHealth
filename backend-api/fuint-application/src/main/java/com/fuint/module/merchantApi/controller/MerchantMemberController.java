@@ -7,6 +7,7 @@ import com.fuint.common.param.MemberDetailParam;
 import com.fuint.common.param.MemberInfoParam;
 import com.fuint.common.param.MemberListParam;
 import com.fuint.common.param.MemberPage;
+import com.fuint.common.service.HealthReportService;
 import com.fuint.common.service.MemberService;
 import com.fuint.common.service.StaffService;
 import com.fuint.common.service.UserGradeService;
@@ -25,6 +26,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -56,6 +58,11 @@ public class MerchantMemberController extends BaseController {
      * 会员等级服务接口
      **/
     private UserGradeService userGradeService;
+
+    /**
+     * 健康报告服务接口
+     **/
+    private HealthReportService healthReportService;
 
     /**
      * 会员列表查询
@@ -168,5 +175,35 @@ public class MerchantMemberController extends BaseController {
             memberInfo = memberService.updateMember(mtUser, false);
         }
         return getSuccessResult(memberInfo);
+    }
+
+    /**
+     * 导出会员健康报告
+     */
+    @ApiOperation(value = "导出会员健康报告")
+    @RequestMapping(value = "/exportHealthReport", method = RequestMethod.GET)
+    @CrossOrigin
+    public void exportHealthReport(@RequestParam("memberId") Integer memberId, HttpServletResponse response) throws BusinessCheckException {
+        UserInfo userInfo = TokenUtil.getUserInfo();
+
+        MtStaff staffInfo = null;
+        MtUser mtUser = memberService.queryMemberById(userInfo.getId());
+        if (mtUser != null && mtUser.getMobile() != null) {
+            staffInfo = staffService.queryStaffByMobile(mtUser.getMobile());
+        }
+        if (staffInfo == null) {
+            throw new BusinessCheckException("您的帐号不是商户，没有操作权限");
+        }
+
+        MtUser memberInfo = memberService.queryMemberById(memberId);
+        if (memberInfo == null) {
+            throw new BusinessCheckException("会员信息不存在");
+        }
+
+        if (!memberInfo.getMerchantId().equals(staffInfo.getMerchantId())) {
+            throw new BusinessCheckException("您没有权限操作该会员");
+        }
+
+        healthReportService.generateHealthReportPdf(memberId, response);
     }
 }
