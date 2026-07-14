@@ -445,7 +445,7 @@ public class BackendOrderController extends BaseController {
         PaginationResponse<UserOrderDto> result = orderService.getUserOrderList(params);
 
         // excel标题
-        String[] title = { "订单号", "会员名称", "手机号", "订单类型", "所属门店", "总金额", "支付状态", "订单状态" };
+        String[] title = { "订单号", "会员名称", "手机号", "订单类型", "配送方式", "所属门店", "总金额", "支付状态", "订单状态", "支付金额", "优惠金额", "积分金额", "所属员工", "下单时间", "更新时间" };
 
         // excel文件名
         String fileName = "订单列表"+ DateUtil.formatDate(new Date(), "yyyy.MM.dd_HHmm") +".xls";
@@ -467,6 +467,8 @@ public class BackendOrderController extends BaseController {
                 String storeName = "";
                 String userName = "";
                 String mobile = "";
+                String orderModeText = "";
+                String staffName = "";
                 if (orderDto.getStoreInfo() != null) {
                     storeName = orderDto.getStoreInfo().getName();
                 }
@@ -478,14 +480,32 @@ public class BackendOrderController extends BaseController {
                 } else if(orderDto.getUserInfo() != null) {
                     mobile = orderDto.getUserInfo().getMobile();
                 }
+                if (orderDto.getOrderMode() != null) {
+                    for (OrderModeEnum mode : OrderModeEnum.values()) {
+                        if (mode.getKey().equals(orderDto.getOrderMode())) {
+                            orderModeText = mode.getValue();
+                            break;
+                        }
+                    }
+                }
+                if (orderDto.getStaffInfo() != null) {
+                    staffName = orderDto.getStaffInfo().getRealName();
+                }
                 content[i][0] = objectConvertToString(orderDto.getOrderSn());
                 content[i][1] = objectConvertToString(userName);
                 content[i][2] = objectConvertToString(mobile);
                 content[i][3] = objectConvertToString(orderDto.getTypeName());
-                content[i][4] = objectConvertToString(storeName);
-                content[i][5] = objectConvertToString(orderDto.getAmount());
-                content[i][6] = objectConvertToString(orderDto.getPayStatus());
-                content[i][7] = objectConvertToString(orderDto.getStatusText());
+                content[i][4] = objectConvertToString(orderModeText);
+                content[i][5] = objectConvertToString(storeName);
+                content[i][6] = objectConvertToString(orderDto.getAmount());
+                content[i][7] = objectConvertToString(orderDto.getPayStatus());
+                content[i][8] = objectConvertToString(orderDto.getStatusText());
+                content[i][9] = objectConvertToString(orderDto.getPayAmount());
+                content[i][10] = objectConvertToString(orderDto.getDiscount());
+                content[i][11] = objectConvertToString(orderDto.getPointAmount());
+                content[i][12] = objectConvertToString(staffName);
+                content[i][13] = objectConvertToString(orderDto.getCreateTime());
+                content[i][14] = objectConvertToString(orderDto.getUpdateTime());
             }
         }
 
