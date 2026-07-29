@@ -293,7 +293,7 @@ public class BackendCashierController extends BaseController {
         }
 
         MtUser userInfo = memberService.queryMemberById(Integer.parseInt(userId));
-        if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0 && !accountInfo.getMerchantId().equals(userInfo.getMerchantId())) {
+        if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0 && userInfo != null && !accountInfo.getMerchantId().equals(userInfo.getMerchantId())) {
             return getFailureResult(1004);
         }
 

@@ -1184,7 +1184,7 @@ public class CouponServiceImpl extends ServiceImpl<MtCouponMapper, MtCoupon> imp
      *
      * @param id 批次ID
      * @param uuid 批次ID
-     * @param accountInfo   操作人
+     * @param accountInfo 操作人
      * @return
      */
     @Override
@@ -1201,8 +1201,6 @@ public class CouponServiceImpl extends ServiceImpl<MtCouponMapper, MtCoupon> imp
         List<Integer> couponIds = new ArrayList<>();
         couponIds.add(0);
 
-        Date nowDate = new Date();
-
         for (int i = 0; i < coupondIdList.size(); i++) {
             Integer couponId = coupondIdList.get(i);
             MtCoupon couponInfo = queryCouponById(couponId);
@@ -1212,7 +1210,7 @@ public class CouponServiceImpl extends ServiceImpl<MtCouponMapper, MtCoupon> imp
             if (accountInfo.getMerchantId() > 0 && !couponInfo.getMerchantId().equals(accountInfo.getMerchantId())) {
                 throw new BusinessCheckException("不同商户，没有操作权限");
             }
-            if (couponInfo.getStatus().equals(StatusEnum.ENABLED.getKey()) && couponInfo.getEndTime().after(nowDate)) {
+            if (couponInfo.getStatus().equals(StatusEnum.ENABLED.getKey())) {
                 couponIds.add(couponId);
             }
         }
