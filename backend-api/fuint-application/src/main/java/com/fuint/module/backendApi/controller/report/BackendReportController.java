@@ -100,6 +100,20 @@ public class BackendReportController extends BaseController {
         String fileName = "日销售统计报表_" + DateUtil.formatDate(new Date(), "yyyy.MM.dd_HHmm") + ".xls";
         String sheetName = "日销售统计";
 
+        // 构建顶部汇总行
+        String[] summaryTitle = { "总订单笔数", "总销售金额", "总现金支付金额", "总微信支付金额", "总支付宝支付金额", "总积分支付金额", "总卡券核销金额", "总余额支付金额" };
+        String[] summaryValue = {
+                objectConvertToString(reportDto.getTotalOrderCount()),
+                objectConvertToString(reportDto.getTotalSalesAmount()),
+                objectConvertToString(reportDto.getTotalCashAmount()),
+                objectConvertToString(reportDto.getTotalWechatAmount()),
+                objectConvertToString(reportDto.getTotalAliPayAmount()),
+                objectConvertToString(reportDto.getTotalPointAmount()),
+                objectConvertToString(reportDto.getTotalCouponAmount()),
+                objectConvertToString(reportDto.getTotalBalanceAmount())
+        };
+        String[][] summary = { summaryTitle, summaryValue };
+
         List<DailySalesItemDto> list = reportDto.getDataList();
         String[][] content = new String[list.size()][title.length];
         for (int i = 0; i < list.size(); i++) {
@@ -116,7 +130,7 @@ public class BackendReportController extends BaseController {
             content[i][9] = objectConvertToString(item.getBalanceAmount());
         }
 
-        HSSFWorkbook wb = ExcelUtil.getHSSFWorkbook(sheetName, title, content, null);
+        HSSFWorkbook wb = ExcelUtil.getHSSFWorkbook(sheetName, title, content, null, summary);
         ExcelUtil.setResponseHeader(response, fileName, wb);
         logger.info("导出日销售统计报表成功...");
     }
