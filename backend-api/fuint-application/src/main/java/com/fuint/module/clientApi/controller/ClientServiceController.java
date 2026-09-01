@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fuint.common.dto.content.ServiceDto;
 import com.fuint.common.enums.SettingTypeEnum;
+import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.service.SettingService;
 import com.fuint.framework.web.BaseController;
 import com.fuint.framework.web.ResponseObject;
@@ -61,7 +62,7 @@ public class ClientServiceController extends BaseController {
             try {
                 ObjectMapper objectMapper = new ObjectMapper();
                 serviceList = objectMapper.readValue(mtSetting.getValue(), new TypeReference<List<ServiceDto>>() {});
-                serviceList.removeIf(item -> !"A".equals(item.getStatus()));
+                serviceList.removeIf(item -> !StatusEnum.ENABLED.getKey().equals(item.getStatus()));
             } catch (JsonProcessingException e) {
                 serviceList = getDefaultServiceList();
             }
