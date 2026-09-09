@@ -15,6 +15,8 @@ import com.fuint.utils.StringUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -33,6 +35,8 @@ import java.util.Map;
 @AllArgsConstructor
 @RequestMapping(value = "/clientApi/page")
 public class ClientPageController extends BaseController {
+
+    private static final Logger logger = LoggerFactory.getLogger(ClientPageController.class);
 
     /**
      * 焦点图服务接口
@@ -78,6 +82,12 @@ public class ClientPageController extends BaseController {
         PageDecorationDto page = pageDecorateService.getDefaultPage(merchantId, storeId, "index");
 
         Map<String, Object> outParams = new HashMap();
+        // 图片上传根路径，客户端渲染装修组件图片时需用它补全相对路径
+        outParams.put("imagePath", settingService.getUploadBasePath());
+        logger.info("client home: merchantId={}, storeId={}, pageType={}, pageHit={}, components={}",
+                merchantId, storeId, "index",
+                page != null,
+                page != null && page.getComponents() != null ? page.getComponents().size() : 0);
         if (page != null && page.getComponents() != null && page.getComponents().size() > 0) {
             outParams.put("page", page);
         } else {

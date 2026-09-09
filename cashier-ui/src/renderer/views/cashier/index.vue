@@ -1050,17 +1050,28 @@ export default {
           .member-info {
             float: left;
             margin-top: 5px;
+            display: flex;
+            align-items: center;
+            max-width: 230px;
             .name {
               margin-left: 2px;
               margin-right: 3px;
+              overflow: hidden;
+              white-space: nowrap;
+              text-overflow: ellipsis;
             }
             .none {
                margin-left: 2px;
-               margin-right: 5px;
+               margin-right: 3px;
                font-size: 13px;
+               overflow: hidden;
+               white-space: nowrap;
+               text-overflow: ellipsis;
             }
             .switch {
               padding: 8px 8px 8px 4px;
+              flex-shrink: 0;
+              margin-top: -2px;
             }
           }
         }
@@ -1271,19 +1282,62 @@ export default {
          }
        }
        .goods-list-small {
-         height: 100%;
+         height: calc(100% - 148px);
          width: 100%;
-         margin-top: 148px;
-         margin-left: 2px;
+         padding: 148px 2px 0px 2px;
          overflow: auto;
          scrollbar-width: none;
-         margin-bottom: 70px;
+         display: flex;
+         flex-wrap: wrap;
+         align-content: flex-start;
+         .goods-item {
+           width: 12.5%;
+           min-width: 70px;
+           padding: 3px;
+           background: #ffffff;
+           text-align: left;
+           cursor: pointer;
+           .item {
+             background: #ffffff;
+             padding: 4px;
+             border-radius: 4px;
+             border: solid 1px #dddddd;
+             margin: 0px;
+             .goods-name {
+               margin-top: 4px;
+               font-size: 10px;
+               color: #666666;
+               height: 16px;
+               overflow: hidden;
+               white-space: nowrap;
+               text-overflow: ellipsis;
+             }
+             .goods-price {
+               color: #ff5b57;
+               font-size: 10px;
+               font-weight: bold;
+             }
+             .image {
+               width: 100%;
+               height: 60px;
+               border-radius: 2px;
+             }
+           }
+         }
+       }
+       .goods-list-big {
+         height: calc(100% - 148px);
+         width: 100%;
+         padding: 148px 2px 0px 2px;
+         overflow: auto;
+         scrollbar-width: none;
+         display: flex;
+         flex-wrap: wrap;
+         align-content: flex-start;
          .goods-item {
            width: 20%;
-           min-height: 100px;
            min-width: 100px;
            padding: 3px;
-           float: left;
            background: #ffffff;
            text-align: left;
            cursor: pointer;
@@ -1310,52 +1364,6 @@ export default {
              .image {
                width: 100%;
                height: 120px;
-               border-radius: 3px;
-             }
-           }
-         }
-       }
-       .goods-list-big {
-         height: 100%;
-         width: 100%;
-         margin-top: 148px;
-         margin-left: 2px;
-         display: block;
-         overflow: auto;
-         scrollbar-width: none;
-         margin-bottom: 70px;
-         .goods-item {
-           width: 33.3%;
-           min-height: 300px;
-           min-width: 220px;
-           padding: 3px;
-           float: left;
-           text-align: left;
-           cursor: pointer;
-           display: block;
-           .item {
-             background: #ffffff;
-             padding: 5px;
-             border-radius: 5px;
-             border: solid 2px #888888;
-             margin: 0px;
-             .goods-name {
-               margin-top: 10px;
-               font-size: 18px;
-               color: #666666;
-               height: 30px;
-               overflow: hidden;
-               white-space: nowrap;
-               text-overflow: ellipsis;
-             }
-             .goods-price {
-               color: #ff5b57;
-               font-size: 18px;
-               font-weight: bold;
-             }
-             .image {
-               width: 100%;
-               height: 220px;
                border-radius: 3px;
              }
            }

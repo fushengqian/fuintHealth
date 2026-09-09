@@ -1,9 +1,13 @@
 {
   "tabBar": {
+    // #ifdef MP-WEIXIN
+    "custom": true,
+    // #endif
     "color": "#000000",
     "selectedColor": "#ff0000",
     "borderStyle": "black",
     "backgroundColor": "#ffffff",
+    "fontSize":"30rpx",
     "list": [{
       "pagePath": "pages/index/index",
       "iconPath": "static/tabbar/home.png",
