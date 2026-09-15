@@ -1,5 +1,6 @@
 <script>
   import { loadTheme, getTheme, getThemePrimary, isLightColor } from '@/utils/theme'
+  import { switchStore } from '@/utils/merchant'
 
   export default {
 
@@ -16,6 +17,9 @@
     onLaunch(options) {
       // 小程序主动更新
       this.updateManager()
+      // 链接中携带 storeId 时先切换店铺(早于页面 onLoad)，
+      // 保证主题/导航等接口带的是当前链接对应店铺的参数，而不是上次访问残留的
+      this.applyUrlStoreId(options)
       // 先用本地缓存主题同步设置导航栏, 保证首帧不是 pages.json 默认色
       this.applyNavigationBarColor(getTheme())
       // 预加载主题配置(force=true: 忽略本地缓存, 启动时直接拉取后台最新主题并写缓存,
@@ -29,6 +33,27 @@
     },
 
     methods: {
+
+      /**
+       * 解析启动参数/链接中的 storeId 并切换店铺（H5 场景）
+       */
+      applyUrlStoreId(options) {
+        let storeId = options && options.query ? options.query.storeId : ''
+        // #ifdef H5
+        if (!storeId) {
+          try {
+            const match = window.location.href.match(/[?&]storeId=(\d+)/)
+            if (match) {
+              storeId = match[1]
+            }
+          } catch (e) {
+            // empty
+          }
+        }
+        // #endif
+        // 与首页 onLoad 保持一致：与当前店铺不同才切换（清空商户号与主题/导航缓存）
+        switchStore(storeId)
+      },
 
       /**
        * 同步设置顶部导航栏颜色
