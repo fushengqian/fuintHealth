@@ -1,6 +1,6 @@
 <script>
   import { loadTheme, getTheme, getThemePrimary, isLightColor } from '@/utils/theme'
-  import { switchStore } from '@/utils/merchant'
+  import { switchStore, initMerchant } from '@/utils/merchant'
 
   export default {
 
@@ -22,10 +22,13 @@
       this.applyUrlStoreId(options)
       // 先用本地缓存主题同步设置导航栏, 保证首帧不是 pages.json 默认色
       this.applyNavigationBarColor(getTheme())
-      // 预加载主题配置(force=true: 忽略本地缓存, 启动时直接拉取后台最新主题并写缓存,
+      // 先确认当前商户号（链接带 storeId 时 merchantNo 由 systemConfig 返回），
+      // 再预加载主题配置(force=true: 忽略本地缓存, 启动时直接拉取后台最新主题并写缓存,
       // 避免页面先用默认色渲染、接口返回后再切换造成的闪烁)
-      loadTheme(true).then(theme => {
-        this.applyNavigationBarColor(theme)
+      initMerchant().then(() => {
+        loadTheme(true).then(theme => {
+          this.applyNavigationBarColor(theme)
+        })
       })
       if (options.query.spm) {
           uni.setStorageSync('shareId', options.query.spm);
@@ -62,6 +65,10 @@
         // #ifdef MP-WEIXIN
         const c = (theme && theme.colors) || {}
         const bg = c.primary || getThemePrimary()
+        // 未配置主题时不改导航栏，保持 pages.json/globalStyle 的默认样式
+        if (!bg) {
+          return
+        }
         try {
           uni.setNavigationBarColor({
             // 导航栏背景为浅色(含白色兜底)时使用黑色文字, 否则白色文字

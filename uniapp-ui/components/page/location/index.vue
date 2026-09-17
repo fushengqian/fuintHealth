@@ -47,7 +47,8 @@
 .main-loc {
   color: #ffffff;
   .diy-location {
-    background: linear-gradient(to bottom, $fuint-theme, $fuint-theme);
+    // 背景跟随后台主题设置的主色（--theme-primary 由页面根节点注入，随系统主题变化）
+    background: var(--theme-primary, #{$fuint-theme});
     padding: 3rpx 20rpx 16rpx 20rpx;
   }
 

@@ -1,5 +1,5 @@
 <template>
-  <view class="container">
+  <view :style="themeVars" class="container">
     <!-- 页面顶部 -->
     <view v-if="list.length" class="head-info">
       <view class="cart-total">
@@ -411,7 +411,7 @@
     text-align: center;
     color: #fff;
     border-radius: 5rpx;
-    background: linear-gradient(to right, $fuint-theme, $fuint-theme);
+    background: linear-gradient(to right, $fuint-theme, $fuint-line);
   }
 
   // 底部操作栏
@@ -481,7 +481,7 @@
 
       // 立即购买按钮
       .btn-main {
-        background: linear-gradient(to right, $fuint-theme, $fuint-theme);
+        background: linear-gradient(to right, $fuint-theme, $fuint-line);
         color: #fff;
         padding-top: 5rpx;
         border-radius: 5rpx;

@@ -61,6 +61,7 @@ export function normalizeConfig(config, imagePath) {
     style: {
       bgColor: style.bgColor || '#ffffff',
       textColor: style.textColor || '#999999',
+      // 不预置兜底主色：未配置选中色且无主题时留空，由组件自身默认样式决定
       selectedColor: style.selectedColor || getThemePrimary(),
       height: Number(style.height) || 50
     },

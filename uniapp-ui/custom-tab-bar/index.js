@@ -25,9 +25,9 @@ function normalizePagePath(path) {
 
 Component({
   data() {
-    // 启动时优先读取已缓存主题；无缓存时用白色兜底(无配置时整条隐藏, 不参与显示)
+    // 启动时优先读取已缓存主题；未配置主题时不预置任何颜色
     const theme = wx.getStorageSync('theme')
-    const primary = (theme && theme.colors && theme.colors.primary) || '#ffffff'
+    const primary = (theme && theme.colors && theme.colors.primary) || ''
     return {
       // 后端未返回有效配置前不显示
       visible: false,
@@ -48,9 +48,7 @@ Component({
     attached() {
       // 每次 attached 时同步从 storage 读最新主题色，确保装修配置推送过来时能跟随后台主题
       const t = wx.getStorageSync('theme')
-      if (t && t.colors && t.colors.primary) {
-        this.data._themePrimary = t.colors.primary
-      }
+      this.setData({ _themePrimary: (t && t.colors && t.colors.primary) || '' })
       // 优先使用页面缓存的最新配置(图标地址已在 utils/tabbar.js 中补全)
       const config = wx.getStorageSync('tabbar') || null
       console.log('[custom-tabbar] attached, cache config:', config)
@@ -92,6 +90,9 @@ Component({
         return
       }
 
+      // 每次应用配置都实时读取主题色，避免使用 attached 时的旧快照导致换色/切店后不跟随
+      const t = wx.getStorageSync('theme')
+      const primary = (t && t.colors && t.colors.primary) || ''
       this.setData({
         visible: true,
         list: list,
@@ -99,7 +100,8 @@ Component({
         showText: config.type !== 'image',
         bgColor: style.bgColor || '#ffffff',
         textColor: style.textColor || '#999999',
-        selectedColor: style.selectedColor || this.data._themePrimary,
+        // 未配置选中色且无主题时留空，不套用任何兜底主色
+        selectedColor: style.selectedColor || primary,
         barHeight: Math.max(40, Math.min(Number(style.height) || 50, 80))
       })
       console.log('[custom-tabbar] applyConfig done, list:', list)

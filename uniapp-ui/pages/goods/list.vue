@@ -1,5 +1,5 @@
-m<template>
-  <mescroll-body ref="mescrollRef" :sticky="true" @init="mescrollInit" :down="{ native: true }" @down="downCallback"
+<template>
+  <mescroll-body :style="themeVars" ref="mescrollRef" :sticky="true" @init="mescrollInit" :down="{ native: true }" @down="downCallback"
     :up="upOption" @up="upCallback">
     <!-- 页面头部 -->
     <view class="header">

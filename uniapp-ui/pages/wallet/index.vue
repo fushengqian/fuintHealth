@@ -1,6 +1,6 @@
 <template>
-  <view class="container" v-if="!isLoading">
-    <view class="space-upper">
+  <view :style="themeVars" class="container" v-if="!isLoading">
+    <view class="space-upper" :style="'background:' + themeColor">
       <view class="wallet-account">
         <view class="wallet-account_balance">
           <text>￥{{ userInfo.balance }}</text>

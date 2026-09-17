@@ -13,10 +13,15 @@
  */
 
 /* 颜色变量 */
-$fuint-theme: #00acac;
+/* 主色统一跟随系统主题：--theme-primary 由 utils/theme.js 注入(页面根节点 :style="themeVars")。
+   后台未配置主题时不注入该变量，这里只保留一个中性色(#333)保证白底上的可读性，
+   不预置任何品牌主题色 */
+$fuint-theme: var(--theme-primary, #333333);
+
+$fuint-line: #7450ab;
 
 /* 行为相关颜色 */
-$uni-color-primary: #007aff;
+$uni-color-primary: #6677df;
 $uni-color-success: #4cd964;
 $uni-color-warning: #f0ad4e;
 $uni-color-error: #dd524d;

@@ -1,4 +1,5 @@
 import config from '@/config'
+import * as settingApi from '@/api/setting'
 
 /**
  * 商户/店铺作用域工具
@@ -73,6 +74,7 @@ export function switchStore(storeId) {
   uni.removeStorageSync('theme')
   uni.removeStorageSync('theme_time')
   uni.removeStorageSync('tabbar')
+  uni.removeStorageSync('storeInfo')
   return true
 }
 
@@ -86,4 +88,58 @@ export function setMerchantNo(merchantNo) {
   if (merchantNo === uni.getStorageSync('merchantNo')) return false
   uni.setStorageSync('merchantNo', merchantNo)
   return true
+}
+
+/**
+ * 读取已缓存的店铺信息（systemConfig 返回）
+ */
+export function getStoreInfo() {
+  return uni.getStorageSync('storeInfo') || null
+}
+
+// systemConfig 请求去重：多页面同时进入时复用同一个请求
+let initPromise = null
+
+/**
+ * 初始化/校正当前商户与店铺信息（systemConfig）
+ *
+ * 主题与底部导航都按「商户号 + 店铺ID」下发，请求头里的 merchantNo 必须来自 systemConfig。
+ * 此前只有首页会拉取并写入商户号，导致链接带 storeId 直达「我的/订单/分类」等页面时，
+ * 商户号一直为空，主题与导航请求被跳过（isMerchantReady 为 false），切店后不再切换。
+ * 这里统一提供初始化入口，任意页面进入时都可调用，已就绪时不会产生网络请求。
+ *
+ * @param {boolean} force 是否强制重新拉取
+ * @returns {Promise<boolean>} 商户/店铺是否发生变化（true 表示需强制刷新主题与底部导航）
+ */
+export function initMerchant(force = false) {
+  // 商户号已就绪且已有店铺信息时无需请求（仅本地判断，成本极低）
+  if (!force && isMerchantReady() && getStoreInfo()) {
+    return Promise.resolve(false)
+  }
+  // 已有请求在进行中时复用，避免并发重复请求
+  if (initPromise) {
+    return initPromise
+  }
+
+  initPromise = settingApi.systemConfig()
+    .then(result => {
+      const storeInfo = result && result.data ? result.data.storeInfo : null
+      if (!storeInfo) return false
+      const storeChanged = getStoreId() !== String(storeInfo.id || '')
+      if (storeInfo.id) {
+        uni.setStorageSync('storeId', String(storeInfo.id))
+      }
+      // 商户号就绪（或发生变化）后，调用方据此强制刷新主题与底部导航
+      const merchantChanged = setMerchantNo(storeInfo.merchantNo)
+      uni.setStorageSync('storeInfo', storeInfo)
+      return storeChanged || merchantChanged
+    })
+    .catch(() => {
+      // 如跨商户登录态失效(1001)等，保持现有配置，不触发刷新
+      return false
+    })
+    .finally(() => {
+      initPromise = null
+    })
+  return initPromise
 }

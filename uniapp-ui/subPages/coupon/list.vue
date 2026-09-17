@@ -1,5 +1,5 @@
 <template>
-  <mescroll-body ref="mescrollRef" :sticky="true" @init="mescrollInit" :down="{ native: true }" @down="downCallback"
+  <mescroll-body :style="themeVars" ref="mescrollRef" :sticky="true" @init="mescrollInit" :down="{ native: true }" @down="downCallback"
     :up="upOption" @up="upCallback">
 
     <!-- 排序标签 -->
@@ -339,7 +339,7 @@
     text-align: center;
     color: #fff;
     border-radius: 5rpx;
-    background: linear-gradient(to right, $fuint-theme, $fuint-theme);
+    background: linear-gradient(to right, $fuint-theme, $fuint-line);
   }
 
   // 单列显示

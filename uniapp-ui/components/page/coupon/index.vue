@@ -49,15 +49,15 @@
 
     computed: {
       primary() {
+        // 不使用兜底主色：未配置主题时返回空，由组件自身默认样式决定
         const p = getThemePrimary()
-        // 主题未拉取或后台未配置时，使用项目默认青色兜底，避免纯白卡片
-        return p && p !== '#ffffff' ? p : '#1abc9c'
+        return p && p !== '#ffffff' ? p : ''
       },
-      // 外层背景优先使用后台配置；未配置或配置为白色/旧默认值时使用浅青色，与设计图/后台预览默认一致
+      // 外层背景优先使用后台配置；未配置时不套用默认主题的浅紫底
       wrapBg() {
         const bg = this.itemStyle.background
         if (!bg || bg === '#ffffff' || bg === '#1890ff') {
-          return '#e0f7fa'
+          return ''
         }
         return bg
       },

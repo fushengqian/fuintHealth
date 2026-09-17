@@ -49,6 +49,7 @@
         selected: 0,
         bgColor: '#ffffff',
         textColor: '#999999',
+        // 未配置主题时留空，由组件默认样式决定
         selectedColor: getThemePrimary(),
         barHeight: 50
       }
@@ -98,6 +99,8 @@
         this.textColor = style.textColor || '#999999'
         this.selectedColor = style.selectedColor || getThemePrimary()
         this.barHeight = Math.max(40, Math.min(Number(style.height) || 50, 80))
+        // 高度/安全区变化后重新上报自身总高度，供页面结算栏精确避让
+        this.emitHeight()
         // 页面切换时路由可能尚未就绪，延迟重试保证选中态最终校正到位
         this.syncSelected()
       },
@@ -107,6 +110,22 @@
       // force 为 true 时强制重新拉取配置（切换商户/店铺后使用）
       refresh(force = false) {
         this.load(force)
+      },
+      // 实测自身总高度(含上边框与底部安全区 padding)并上报给页面。
+      // 页面据此定位底部结算栏，避免按配置高度推算时因边框/安全区产生缝隙
+      emitHeight() {
+        this.$nextTick(() => {
+          setTimeout(() => {
+            const query = uni.createSelectorQuery().in(this)
+            query.select('.h5-tabbar').boundingClientRect()
+            query.exec(rects => {
+              const rect = rects && rects[0]
+              if (rect && rect.height > 0) {
+                this.$emit('height', rect.height)
+              }
+            })
+          }, 50)
+        })
       },
       // 同步选中态并延迟重试：页面切换时路由可能尚未就绪，延迟保证最终校正到位
       syncSelected() {

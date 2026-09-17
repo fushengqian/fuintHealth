@@ -124,6 +124,7 @@
         height: 16rpx;
         margin-right: 8rpx;
         background-color: #fff;
+        border-radius: 0;
 
         &:last-child {
           margin-right: 0;
@@ -134,23 +135,26 @@
         }
       }
 
-      // 圆形
+      // 圆形：后台配置值为 circle，兼容历史数据里的 round
+      &.circle .dots-item,
       &.round .dots-item {
         width: 16rpx;
         height: 16rpx;
-        border-radius: 20rpx;
+        border-radius: 50%;
       }
 
       // 正方形
       &.square .dots-item {
         width: 16rpx;
         height: 16rpx;
+        border-radius: 0;
       }
 
       // 长方形
       &.rectangle .dots-item {
         width: 22rpx;
         height: 14rpx;
+        border-radius: 2rpx;
       }
 
     }

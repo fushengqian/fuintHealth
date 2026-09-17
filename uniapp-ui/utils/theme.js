@@ -1,20 +1,23 @@
 import * as themeApi from '@/api/theme'
 import { getMerchantScope, isMerchantReady } from './merchant'
 
-// 无主题缓存/后台主题不可用时的兜底色：
-// 不使用品牌青，避免启动瞬间或主题拉取前闪出与后台主题不一致的青色；
-// 用白色作为中性兜底，主题接口返回后即被覆盖
-const DEFAULT_PRIMARY = '#ffffff'
-const DEFAULT_THEME = {
-  themeId: '',
-  themeName: '默认主题',
-  colors: {
-    primary: DEFAULT_PRIMARY,
-    secondary: '#e0f4f4',
-    text: '#333333',
-    bg: '#f5f5f5',
-    price: '#f03c3c'
+// 不使用任何兜底主题色：后台未配置主题（或主题尚未拉取到）时不注入主色，
+// 页面保持自身的默认样式，避免出现「假的默认主题」。主题接口返回后立即生效。
+function emptyTheme() {
+  return {
+    themeId: '',
+    themeName: '',
+    colors: {}
   }
+}
+
+// 颜色键与 CSS 变量名的对应关系
+const THEME_VARS = {
+  primary: '--theme-primary',
+  secondary: '--theme-secondary',
+  text: '--theme-text',
+  bg: '--theme-bg',
+  price: '--theme-price'
 }
 
 // 主题缓存有效期:1 小时
@@ -29,7 +32,7 @@ let loadingPromise = null
  */
 export function getTheme() {
   const theme = uni.getStorageSync('theme')
-  return theme && theme.colors ? theme : DEFAULT_THEME
+  return theme && theme.colors ? theme : emptyTheme()
 }
 
 /**
@@ -46,28 +49,32 @@ export function setTheme(theme, scope) {
  * 注意必须返回字符串而非对象：uni-app 编译到微信小程序时,
  * :style="obj" 会被序列化为 style="{{(obj)}}",对象会变成 [object Object],
  * CSS 变量在 page 内彻底失效。字符串形式在 H5 与小程序端都会被作为 inline style 正确解析。
+ *
+ * 只为后台实际下发的颜色生成变量，未配置的颜色不生成，交由页面自身默认样式决定。
  */
 export function buildThemeVars(theme) {
   const t = theme || getTheme()
-  const colors = t.colors || {}
-  const c = Object.assign({}, DEFAULT_THEME.colors, colors)
+  const colors = (t && t.colors) || {}
   const parts = []
-  parts.push(`--theme-primary: ${c.primary}`)
-  parts.push(`--theme-secondary: ${c.secondary}`)
-  parts.push(`--theme-text: ${c.text}`)
-  parts.push(`--theme-bg: ${c.bg}`)
-  parts.push(`--theme-price: ${c.price}`)
+  Object.keys(THEME_VARS).forEach((key) => {
+    if (colors[key]) {
+      parts.push(`${THEME_VARS[key]}: ${colors[key]}`)
+    }
+  })
   // 同时同步 SCSS 编译后对应的 CSS 变量，让 $fuint-theme 的 100+ 处引用也跟随主题
-  parts.push(`--fuint-theme: ${c.primary}`)
+  if (colors.primary) {
+    parts.push(`--fuint-theme: ${colors.primary}`)
+  }
   return parts.join('; ')
 }
 
 /**
- * 读取当前主题的 primary 色（用于组件如 tabbar 选中色等无 CSS 变量场景的兜底）
+ * 读取当前主题的 primary 色（用于组件如 tabbar 选中色、导航栏等无 CSS 变量场景）
+ * 未配置主题时返回空字符串，调用方据此自行决定是否设置颜色
  */
 export function getThemePrimary() {
   const t = getTheme()
-  return (t && t.colors && t.colors.primary) || DEFAULT_PRIMARY
+  return (t && t.colors && t.colors.primary) || ''
 }
 
 /**
@@ -85,19 +92,42 @@ export function isLightColor(color) {
 }
 
 /**
- * H5 环境下注入全局 CSS 变量(作用于 document.documentElement)
+ * 注入主题 CSS 变量(全站生效, 页面无需再在根节点绑定 themeVars)
+ * - H5: 写入 document.documentElement, 所有页面/组件都能读取
+ * - 微信小程序: 通过 wx.setPageStyle 把变量写到当前页面 page 节点的 cssText,
+ *   页面每次 onShow 都会重新写入; 基础库过低时静默忽略(fail 回调),
+ *   此时仍可由页面根节点 :style="themeVars" 兜底
+ *
+ * 未配置的颜色会被移除，避免沿用上一个商户/上一个页面的主题变量
  */
-function applyH5Theme(theme) {
-  // #ifdef H5
+export function applyGlobalTheme(theme) {
   const t = theme || getTheme()
-  const c = Object.assign({}, DEFAULT_THEME.colors, (t && t.colors) || {})
+  const colors = (t && t.colors) || {}
+  // #ifdef H5
   const style = document.documentElement.style
-  style.setProperty('--theme-primary', c.primary)
-  style.setProperty('--theme-secondary', c.secondary)
-  style.setProperty('--theme-text', c.text)
-  style.setProperty('--theme-bg', c.bg)
-  style.setProperty('--theme-price', c.price)
-  style.setProperty('--fuint-theme', c.primary)
+  Object.keys(THEME_VARS).forEach((key) => {
+    if (colors[key]) {
+      style.setProperty(THEME_VARS[key], colors[key])
+    } else {
+      style.removeProperty(THEME_VARS[key])
+    }
+  })
+  if (colors.primary) {
+    style.setProperty('--fuint-theme', colors.primary)
+  } else {
+    style.removeProperty('--fuint-theme')
+  }
+  // #endif
+  // #ifdef MP-WEIXIN
+  try {
+    if (typeof wx !== 'undefined' && typeof wx.setPageStyle === 'function') {
+      // 普通 CSS 属性写 style 字段, CSS 变量这类特殊样式需要写在 cssText 里
+      wx.setPageStyle({
+        style: { cssText: buildThemeVars(t) },
+        fail() {}
+      })
+    }
+  } catch (e) {}
   // #endif
 }
 
@@ -107,7 +137,7 @@ function applyH5Theme(theme) {
 export function loadTheme(force) {
   const scope = getMerchantScope()
   const cached = uni.getStorageSync('theme')
-  const cachedTheme = cached && cached.colors ? cached : DEFAULT_THEME
+  const cachedTheme = cached && cached.colors ? cached : emptyTheme()
   const scopeMatched = !!(cached && cached._scope === scope)
   const time = uni.getStorageSync('theme_time')
   const inCacheTime = !!(time && Date.now() - time < CACHE_DURATION)
@@ -115,13 +145,13 @@ export function loadTheme(force) {
   // 切换店铺后商户号尚未就绪(systemConfig 未返回)时不请求,
   // 否则请求头带的仍是上一个商户的商户号, 会拉到错误商户的主题
   if (!isMerchantReady()) {
-    applyH5Theme(cachedTheme)
+    applyGlobalTheme(cachedTheme)
     return Promise.resolve(cachedTheme)
   }
 
   // 缓存命中条件:未强制刷新 + 商户/店铺作用域一致 + 未超过缓存有效期
   if (!force && scopeMatched && inCacheTime) {
-    applyH5Theme(cachedTheme)
+    applyGlobalTheme(cachedTheme)
     return Promise.resolve(cachedTheme)
   }
 
@@ -138,15 +168,15 @@ export function loadTheme(force) {
     .then(res => {
       const theme = res.data || {}
       if (!theme.colors) {
-        theme.colors = DEFAULT_THEME.colors
+        theme.colors = {}
       }
       setTheme(theme, scope)
-      applyH5Theme(theme)
+      applyGlobalTheme(theme)
       return theme
     })
     .catch(() => {
       const theme = getTheme()
-      applyH5Theme(theme)
+      applyGlobalTheme(theme)
       return theme
     })
     .finally(() => {

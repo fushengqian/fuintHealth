@@ -1,5 +1,5 @@
 <template>
-  <view v-show="!isLoading" class="container">
+  <view :style="themeVars" v-show="!isLoading" class="container">
     <!-- 商品图片轮播 -->
     <view class="images-wrapper">
       <SlideImage v-if="!isLoading" :images="goods.images" />

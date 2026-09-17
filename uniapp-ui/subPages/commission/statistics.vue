@@ -1,5 +1,5 @@
 <template>
-  <view class="container">
+  <view :style="themeVars" class="container">
     <!-- 概览统计卡片 -->
     <view class="overview-card">
       <view class="card-header">
@@ -132,7 +132,7 @@
   /* 概览统计卡片 */
   .overview-card {
     margin: 20rpx;
-    background: linear-gradient(135deg, #6d64c5, #7450ab);
+    background: linear-gradient(135deg, $fuint-theme, $fuint-line);
     border-radius: 16rpx;
     padding: 30rpx;
     color: #fff;

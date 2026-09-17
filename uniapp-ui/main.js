@@ -19,6 +19,8 @@ import {
   getThemePrimary,
   isLightColor
 } from './utils/theme'
+import { initMerchant } from './utils/merchant'
+import { refreshMerchantConfig } from './utils/decorate'
 
 Vue.config.productionTip = false
 
@@ -37,22 +39,34 @@ Vue.mixin({
     }
   },
   onShow() {
-    loadTheme().then(theme => {
-      this.themeVars = buildThemeVars(theme)
-      // 微信小程序运行时设置顶部导航栏颜色，覆盖 pages.json 中的静态值
-      // #ifdef MP-WEIXIN
-      const c = (theme && theme.colors) || {}
-      const primary = c.primary || getThemePrimary()
-      this.themeColor = primary
-      try {
-        uni.setNavigationBarColor({
-          // 背景为浅色(含白色兜底)时使用黑色文字, 否则白色文字
-          frontColor: isLightColor(primary) ? '#000000' : '#ffffff',
-          backgroundColor: primary,
-          animation: { duration: 0, timingFunc: 'linear' }
-        })
-      } catch (e) {}
-      // #endif
+    const app = this
+    // 先确认当前商户/店铺（链接带 storeId 直达非首页时，商户号要等 systemConfig 返回才知道），
+    // 商户/店铺发生变化时强制刷新主题与底部导航，否则按缓存加载主题
+    initMerchant().then(changed => {
+      if (changed) {
+        refreshMerchantConfig(app)
+        return
+      }
+      loadTheme().then(theme => {
+        app.themeVars = buildThemeVars(theme)
+        // 微信小程序运行时设置顶部导航栏颜色，覆盖 pages.json 中的静态值
+        // #ifdef MP-WEIXIN
+        const c = (theme && theme.colors) || {}
+        const primary = c.primary || getThemePrimary()
+        app.themeColor = primary
+        // 未配置主题时不改导航栏，保持 pages.json/globalStyle 的默认样式
+        if (primary) {
+          try {
+            uni.setNavigationBarColor({
+              // 背景为浅色时使用黑色文字, 否则白色文字
+              frontColor: isLightColor(primary) ? '#000000' : '#ffffff',
+              backgroundColor: primary,
+              animation: { duration: 0, timingFunc: 'linear' }
+            })
+          } catch (e) {}
+        }
+        // #endif
+      })
     })
   }
 })

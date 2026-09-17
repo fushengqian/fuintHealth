@@ -1,5 +1,5 @@
 <template>
-  <mescroll-body ref="mescrollRef" :sticky="true" @init="mescrollInit" :down="{ native: true }" @down="downCallback"
+  <mescroll-body :style="themeVars" ref="mescrollRef" :sticky="true" @init="mescrollInit" :down="{ native: true }" @down="downCallback"
     :up="upOption" @up="upCallback">
     
     <view class="search-wrapper">
@@ -325,7 +325,7 @@
     text-align: center;
     color: #fff;
     border-radius: 5rpx;
-    background: linear-gradient(to right, $fuint-theme, $fuint-theme);
+    background: linear-gradient(to right, $fuint-theme, $fuint-line);
   }
 
   // 单列显示

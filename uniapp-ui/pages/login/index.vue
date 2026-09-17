@@ -1,8 +1,9 @@
 <template>
-  <div>
+  <!-- 绑定主题 CSS 变量，登录页的按钮/协议链接等颜色跟随「主题设置」的主色 -->
+  <view class="login-page" :style="themeVars">
     <MpWeixin v-if="isShowUserInfo" @passwordLogin="passwordLogin" @success="onGetUserInfoSuccess" />
     <Main v-else :isParty="isExistUserInfo" :partyData="partyData" />
-  </div>
+  </view>
 </template>
 
 <script>

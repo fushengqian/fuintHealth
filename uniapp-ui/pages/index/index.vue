@@ -34,13 +34,12 @@
   import Goods from '@/components/page/goods'
   import Page from '@/components/page'
   import Empty from '@/components/empty'
-  import * as settingApi from '@/api/setting'
   import * as Api from '@/api/page'
   import MescrollCompMixin from "@/components/mescroll-uni/mixins/mescroll-comp.js";
   import config from '@/config'
   import { loadAndApplyTabbar } from '@/utils/tabbar'
-  import { loadTheme, buildThemeVars } from '@/utils/theme'
-  import { switchStore, setMerchantNo, isThemeScopeMatched } from '@/utils/merchant'
+  import { refreshMerchantConfig } from '@/utils/decorate'
+  import { switchStore, initMerchant, getStoreInfo, isThemeScopeMatched } from '@/utils/merchant'
   // #ifdef H5
   import H5Tabbar from '@/components/tabbar/index.vue'
   // #endif
@@ -220,16 +219,13 @@
                 return;
             }
             app.storeFetching = true;
-            settingApi.systemConfig()
-             .then(result => {
-                 app.storeInfo = result.data.storeInfo;
+            // 统一由 initMerchant 拉取店铺与商户号，商户/店铺变化时强制刷新主题与底部导航
+            initMerchant()
+             .then(changed => {
+                 app.storeInfo = getStoreInfo();
                  if (app.storeInfo) {
-                     const storeChanged = String(uni.getStorageSync("storeId") || '') !== String(app.storeInfo.id);
-                     uni.setStorageSync("storeId", app.storeInfo.id);
-                     // 商户号就绪（或发生变化）后，主题/导航缓存若不属于当前商户则强制刷新
-                     const merchantChanged = setMerchantNo(app.storeInfo.merchantNo);
-                     if (app.storeSwitched || storeChanged || merchantChanged || !isThemeScopeMatched()) {
-                         app.refreshMerchantConfig();
+                     if (changed || app.storeSwitched || !isThemeScopeMatched()) {
+                         refreshMerchantConfig(app);
                      }
                      // 首次进入、或切换店铺需要刷新时，用当前商户/门店参数拉取页面数据
                      let isReflash = uni.getStorageSync("reflashHomeData");
@@ -243,28 +239,7 @@
                  app.storeFetching = false;
                  app.storeSwitched = false;
              })
-         },
-
-        /**
-         * 刷新当前商户的主题与底部导航配置
-         */
-        refreshMerchantConfig() {
-            const app = this;
-            // 强制拉取主题并同步页面 CSS 变量
-            loadTheme(true).then(theme => {
-                app.themeVars = buildThemeVars(theme);
-            });
-            // 强制拉取底部导航配置并应用到自定义 tabBar
-            loadAndApplyTabbar(app, true);
-            // #ifdef H5
-            app.$refs.h5Tabbar && app.$refs.h5Tabbar.refresh(true);
-            // #endif
-            // #ifdef MP-WEIXIN
-            const host = app.$scope || app;
-            const tb = typeof host.getTabBar === 'function' && host.getTabBar();
-            tb && tb.syncSelected && tb.syncSelected();
-            // #endif
-        }
+         }
     },
 
     /**

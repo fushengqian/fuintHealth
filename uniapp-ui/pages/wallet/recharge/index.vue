@@ -1,6 +1,6 @@
 <template>
-  <view class="container" v-if="userInfo.id">
-    <view class="account-panel dis-flex flex-y-center">
+  <view :style="themeVars" class="container" v-if="userInfo.id">
+    <view class="account-panel dis-flex flex-y-center" :style="'background:' + themeColor">
       <view class="panel-lable">
         <text>账户余额</text>
       </view>

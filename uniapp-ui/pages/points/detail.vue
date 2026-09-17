@@ -1,5 +1,5 @@
 <template>
-  <view class="container">
+  <view :style="themeVars" class="container">
     <view class="my-point">
         <view class="my-tip"><text class="iconfont icon-jifen"></text>我的积分余额</view>
         <view class="my-account">{{ userInfo.point ? userInfo.point : 0 }}</view>
@@ -225,6 +225,6 @@
     text-align: center;
     color: #fff;
     border-radius: 5rpx;
-    background: linear-gradient(to right, $fuint-theme, $fuint-theme);
+    background: linear-gradient(to right, $fuint-theme, $fuint-line);
   }
 </style>

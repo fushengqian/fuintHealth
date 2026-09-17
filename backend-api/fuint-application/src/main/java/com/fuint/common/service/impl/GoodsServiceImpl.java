@@ -771,6 +771,8 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
         Integer storeId = (params.get("storeId") == null || StringUtil.isEmpty(params.get("storeId").toString())) ? 0 : Integer.parseInt(params.get("storeId").toString());
         Integer cateId = (params.get("cateId") == null || StringUtil.isEmpty(params.get("cateId").toString())) ? 0 : Integer.parseInt(params.get("cateId").toString());
         String keyword = params.get("keyword") == null ? "" : params.get("keyword").toString();
+        // 只查询商品（不展开SKU规格），用于装修等只需选择商品的场景
+        boolean onlyGoods = params.get("onlyGoods") != null && ("true".equals(params.get("onlyGoods").toString()) || "1".equals(params.get("onlyGoods").toString()));
 
         MtStore mtStore = storeService.queryStoreById(storeId);
         if (mtStore != null && mtStore.getMerchantId() != null) {
@@ -779,45 +781,62 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
         Page<MtGoods> pageHelper = PageHelper.startPage(page, pageSize);
         List<GoodsDto> dataList = new ArrayList<>();
 
-        List<GoodsBean> goodsList = mtGoodsMapper.selectGoodsList(merchantId, storeId, cateId, keyword);
-
-        for (GoodsBean goodsBean : goodsList) {
-             GoodsDto goodsDto = new GoodsDto();
-             goodsDto.setId(goodsBean.getGoodsId());
-             goodsDto.setLogo(goodsBean.getLogo());
-             goodsDto.setName(goodsBean.getName());
-             goodsDto.setGoodsNo(goodsBean.getGoodsNo());
-             goodsDto.setStoreId(goodsBean.getStoreId());
-             goodsDto.setPrice(goodsBean.getPrice());
-             goodsDto.setCateId(goodsBean.getCateId());
-             goodsDto.setStock(goodsBean.getStock());
-             if (goodsBean.getSpecIds() != null) {
-                 Map<String, Object> param = new HashMap<>();
-                 param.put("GOODS_ID", goodsBean.getGoodsId());
-                 param.put("SPEC_IDS", goodsBean.getSpecIds());
-                 param.put("STATUS", StatusEnum.ENABLED.getKey());
-                 List<MtGoodsSku> goodsSkuList = mtGoodsSkuMapper.selectByMap(param);
-                 if (goodsSkuList != null && goodsSkuList.size() > 0) {
-                     goodsDto.setSkuId(goodsSkuList.get(0).getId());
-                     goodsDto.setPrice(goodsSkuList.get(0).getPrice());
-                     if (goodsSkuList.get(0).getLogo() != null && StringUtil.isNotEmpty(goodsSkuList.get(0).getLogo())) {
-                         goodsDto.setLogo(goodsSkuList.get(0).getLogo());
-                     }
-                     goodsDto.setStock(goodsSkuList.get(0).getStock());
-                     List<MtGoodsSpec> specList = new ArrayList<>();
-                     String[] specIds = goodsBean.getSpecIds().split("-");
-                     if (specIds.length > 0) {
-                         for (String specId : specIds) {
-                              MtGoodsSpec mtGoodsSpec = mtGoodsSpecMapper.selectById(Integer.parseInt(specId));
-                              if (mtGoodsSpec != null) {
-                                  specList.add(mtGoodsSpec);
-                              }
-                         }
-                     }
-                     goodsDto.setSpecList(specList);
-                 }
-             }
-             dataList.add(goodsDto);
+        List<GoodsBean> goodsList;
+        if (onlyGoods) {
+            goodsList = mtGoodsMapper.selectOnlyGoodsList(merchantId, storeId, cateId, keyword);
+            for (GoodsBean goodsBean : goodsList) {
+                GoodsDto goodsDto = new GoodsDto();
+                goodsDto.setId(goodsBean.getGoodsId());
+                goodsDto.setLogo(goodsBean.getLogo());
+                goodsDto.setName(goodsBean.getName());
+                goodsDto.setGoodsNo(goodsBean.getGoodsNo());
+                goodsDto.setStoreId(goodsBean.getStoreId());
+                goodsDto.setPrice(goodsBean.getPrice());
+                goodsDto.setCateId(goodsBean.getCateId());
+                goodsDto.setStock(goodsBean.getStock());
+                goodsDto.setSkuId(0);
+                dataList.add(goodsDto);
+            }
+        } else {
+            goodsList = mtGoodsMapper.selectGoodsList(merchantId, storeId, cateId, keyword);
+            for (GoodsBean goodsBean : goodsList) {
+                GoodsDto goodsDto = new GoodsDto();
+                goodsDto.setId(goodsBean.getGoodsId());
+                goodsDto.setLogo(goodsBean.getLogo());
+                goodsDto.setName(goodsBean.getName());
+                goodsDto.setGoodsNo(goodsBean.getGoodsNo());
+                goodsDto.setStoreId(goodsBean.getStoreId());
+                goodsDto.setPrice(goodsBean.getPrice());
+                goodsDto.setCateId(goodsBean.getCateId());
+                goodsDto.setStock(goodsBean.getStock());
+                if (goodsBean.getSpecIds() != null) {
+                    Map<String, Object> param = new HashMap<>();
+                    param.put("GOODS_ID", goodsBean.getGoodsId());
+                    param.put("SPEC_IDS", goodsBean.getSpecIds());
+                    param.put("STATUS", StatusEnum.ENABLED.getKey());
+                    List<MtGoodsSku> goodsSkuList = mtGoodsSkuMapper.selectByMap(param);
+                    if (goodsSkuList != null && goodsSkuList.size() > 0) {
+                        goodsDto.setSkuId(goodsSkuList.get(0).getId());
+                        goodsDto.setPrice(goodsSkuList.get(0).getPrice());
+                        if (goodsSkuList.get(0).getLogo() != null && StringUtil.isNotEmpty(goodsSkuList.get(0).getLogo())) {
+                            goodsDto.setLogo(goodsSkuList.get(0).getLogo());
+                        }
+                        goodsDto.setStock(goodsSkuList.get(0).getStock());
+                        List<MtGoodsSpec> specList = new ArrayList<>();
+                        String[] specIds = goodsBean.getSpecIds().split("-");
+                        if (specIds.length > 0) {
+                            for (String specId : specIds) {
+                                MtGoodsSpec mtGoodsSpec = mtGoodsSpecMapper.selectById(Integer.parseInt(specId));
+                                if (mtGoodsSpec != null) {
+                                    specList.add(mtGoodsSpec);
+                                }
+                            }
+                        }
+                        goodsDto.setSpecList(specList);
+                    }
+                }
+                dataList.add(goodsDto);
+            }
         }
 
         PageRequest pageRequest = PageRequest.of(page, pageSize);
