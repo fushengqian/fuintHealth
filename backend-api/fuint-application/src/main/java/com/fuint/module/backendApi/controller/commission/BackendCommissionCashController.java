@@ -16,8 +16,8 @@ import com.fuint.framework.web.ResponseObject;
 import com.fuint.module.backendApi.request.CommissionCashRequest;
 import com.fuint.module.backendApi.request.CommissionSettleConfirmRequest;
 import com.fuint.repository.model.MtStore;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.AllArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -32,7 +32,7 @@ import java.util.Map;
  * Created by FSQ
  * CopyRight https://www.fuint.cn
  */
-@Api(tags="管理端-分销提成提现相关接口")
+@Tag(name="管理端-分销提成提现相关接口")
 @RestController
 @AllArgsConstructor
 @RequestMapping(value = "/backendApi/commissionCash")
@@ -51,7 +51,7 @@ public class BackendCommissionCashController extends BaseController {
     /**
      * 分销提成提现记录列表
      */
-    @ApiOperation(value = "分销提成提现记录列表")
+    @Operation(summary="分销提成提现记录列表")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('commission:cash:index')")
@@ -81,7 +81,7 @@ public class BackendCommissionCashController extends BaseController {
     /**
      * 获取分销提成记录详情
      */
-    @ApiOperation(value = "获取分销提成提现详情")
+    @Operation(summary="获取分销提成提现详情")
     @RequestMapping(value = "/info/{id}", method = RequestMethod.GET)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('commission:cash:index')")
@@ -101,7 +101,7 @@ public class BackendCommissionCashController extends BaseController {
     /**
      * 修改分销提成提现
      */
-    @ApiOperation(value = "修改分销提成提现")
+    @Operation(summary="修改分销提成提现")
     @RequestMapping(value = "/save", method = RequestMethod.POST)
     @PreAuthorize("@pms.hasPermission('commission:cash:index')")
     public ResponseObject save(@RequestBody CommissionCashRequest commissionCashRequest) throws BusinessCheckException {
@@ -117,7 +117,7 @@ public class BackendCommissionCashController extends BaseController {
     /**
      * 支付结算金额到用户余额
      */
-    @ApiOperation(value = "支付结算金额到用户余额")
+    @Operation(summary="支付结算金额到用户余额")
     @RequestMapping(value = "/payToBalance", method = RequestMethod.POST)
     @PreAuthorize("@pms.hasPermission('commission:cash:index')")
     public ResponseObject payToBalance(@RequestBody CommissionCashRequest commissionCashRequest) throws BusinessCheckException {
@@ -133,7 +133,7 @@ public class BackendCommissionCashController extends BaseController {
     /**
      * 结算确认
      */
-    @ApiOperation(value = "结算确认")
+    @Operation(summary="结算确认")
     @RequestMapping(value = "/confirm", method = RequestMethod.POST)
     @PreAuthorize("@pms.hasPermission('commission:cash:index')")
     public ResponseObject confirm(@RequestBody CommissionSettleConfirmRequest requestParam) throws BusinessCheckException {
@@ -149,7 +149,7 @@ public class BackendCommissionCashController extends BaseController {
     /**
      * 取消结算
      */
-    @ApiOperation(value = "取消结算")
+    @Operation(summary="取消结算")
     @RequestMapping(value = "/cancel", method = RequestMethod.POST)
     @PreAuthorize("@pms.hasPermission('commission:cash:index')")
     public ResponseObject cancel(@RequestBody CommissionSettleConfirmRequest requestParam) throws BusinessCheckException {
