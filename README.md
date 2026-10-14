@@ -22,8 +22,8 @@ fuint康养美业是一款专为美容、康养（如SPA、医美、养生馆、
 </p>
 
 #### 软件架构
-后端：JAVA SpringBoot + MYSQL Mybatis Plus + Redis
-前端：采用基于Vue的Uniapp、Element UI，前后端分离，支持微信小程序、h5等
+后端：JAVA SpringBoot3 + MYSQL Mybatis Plus + Redis
+前端：采用基于Uniapp、Vue3、Element UI Plus，前后端分离，支持微信小程序、h5等
 <p>后台截图：</p>
 <p><img src="https://fuint-cn.oss-cn-shenzhen.aliyuncs.com/uploads/cc331ab519f64be9bb0e198cab595b12.png" alt="登录界面"></p>
 <p><img src="https://fuint-health.oss-cn-shenzhen.aliyuncs.com/static/g4.png" alt="后台商品编辑截图"></p>
@@ -32,13 +32,13 @@ fuint康养美业是一款专为美容、康养（如SPA、医美、养生馆、
 代客下单和收银系统，支持余额、微信、支付宝等支付渠道，已对接好扫码枪、扫码盒子、云打印机，订单提交后自动打印小票。
 <p><img src="https://fuint-cn.oss-cn-shenzhen.aliyuncs.com/uploads/bdb4d01a0e984864b54cd641977053e8.png" alt="收银首页"></p>
 前端使用技术<br>
-2.1 Vue<br>
+2.1 Vue3<br>
 2.2 Uniapp<br>
-2.3 Element UI
+2.3 Element UI Plus
 2.4 Nodejs
 
 后端使用技术<br>
-1.1 SpringBoot 2.5<br>
+1.1 SpringBoot 3.2<br>
 1.2 Mybatis Plus<br>
 1.3 Maven<br>
 1.4 SpringSecurity<br>
@@ -53,7 +53,7 @@ fuint康养美业是一款专为美容、康养（如SPA、医美、养生馆、
 
 
 #### 安装步骤
-推荐软件环境版本：jdk 1.8+、mysql 5.8
+推荐软件环境版本：jdk 17+、mysql 5.8
 1. 导入db目录下的数据库文件。
 2. 修改config目录下的配置文件。
 3. 将工程打包，把jar包上传并执行。
