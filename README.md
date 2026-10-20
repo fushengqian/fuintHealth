@@ -3,53 +3,56 @@
 #### 介绍
 fuint康养美业是一款专为美容、康养（如SPA、医美、养生馆、健康管理等）行业设计的会员管理与营销一体化软件系统。提供会员管理、预约与排班、营销自动化、收银与财务管理、员工分佣绩效、多端协同等功能。
 以下是前台的页面展示：
-<p><img src="https://fuint-cn.oss-cn-shenzhen.aliyuncs.com/uploads/bcffc7615f38409c8f6182f7ff6d2a83.png" alt="前台页面1"></p>
-<p><img src="https://fuint-health.oss-cn-shenzhen.aliyuncs.com/static/g6.png" alt="美业会员端截图"></p>
+![fuint美业会员端页面截图](assets/g1.png)
+![fuint美业会员端页面截图](assets/g6.png)
 
 本系统侧重于线下实体店的私域流量的运营，同时提供会员端小程序和收银系统的线上线下统一渠道，帮助商户降低获客成本。顾客通过扫码支付成为私域流量，支付即可成为会员。积分和卡券功能建立起会员等级体系，通过消息推送和短信营销方便触达用户。
-<p>1、会员运营自动化：商家通过日常活动设置，如开卡礼设置，沉睡唤醒等，成为会员后自动给顾客送优惠券，让顾客更有黏性，提升会员运营效率。</p>
-<p>2、打通收银系统和会员营销的壁垒，代客下单收银，支付即成为会员。</p>
-<p>3、会员体系完整化：积分兑换、积分转赠、会员等级权益、积分加速、买单折扣。</p>
-<p>4、会员卡券齐全：储值卡、电子券、优惠券、集次卡、计次卡、实体卡购买并兑换、会员充值、余额支付。</p>
-<p>5、线上代客下单收银系统，后台管理员可帮助临柜的会员下单、扫码支付、订单云打印（自动打印小票）。</p>
-<p>6、支持手机短信、站内弹框消息、微信订阅消息：支持包括发货消息、卡券到期提醒、活动提醒、会员到期提醒、积分余额变动提醒等消息。</p>
-<b>官网演示地址：</b><br>
-<p>
-   1、会员点餐H5：<a target="_blank" href="https://www.fuint.cn/health/">https://www.fuint.cn/health/</a>（需要体验小程序版本可添加管理员微信：YanheJiShu）<br>
-   2、后台地址：<a target="_blank" href="https://www.fuint.cn/fuintHealth/">https://www.fuint.cn/fuintHealth/</a> 演示账号：fuint / 123456<br>
-   3、swagger接口文档：<a target="_blank" href="https://www.fuint.cn/fuint-application/swagger-ui.html">https://www.fuint.cn/fuint-application/swagger-ui.html</a><br>
-   4、完整演示功能：<a target="_blank" href="https://www.fuint.cn/docs/detail?id=41">https://www.fuint.cn/docs/detail?id=41</a>
-</p>
+1、会员运营自动化：商家通过日常活动设置，如开卡礼设置，沉睡唤醒等，成为会员后自动给顾客送优惠券，让顾客更有黏性，提升会员运营效率。
+2、打通收银系统和会员营销的壁垒，代客下单收银，支付即成为会员。
+3、会员体系完整化：积分兑换、积分转赠、会员等级权益、积分加速、买单折扣。
+4、会员卡券齐全：储值卡、电子券、优惠券、集次卡、计次卡、实体卡购买并兑换、会员充值、余额支付。
+5、线上代客下单收银系统，后台管理员可帮助临柜的会员下单、扫码支付、订单云打印（自动打印小票）。
+6、支持手机短信、站内弹框消息、微信订阅消息：支持包括发货消息、卡券到期提醒、活动提醒、会员到期提醒、积分余额变动提醒等消息。
+官网演示地址：<br>
+1、会员点餐H5：https://www.fuint.cn/health/（需要体验小程序版本可添加管理员微信：YanheJiShu）
+2、后台地址：https://www.fuint.cn/fuintHealth/  演示账号：fuint / 123456
+3、swagger接口文档：https://www.fuint.cn/fuint-application/swagger-ui.html
+4、完整演示功能：https://www.fuint.cn/docs/detail?id=41
 
 #### 软件架构
 后端：JAVA SpringBoot3 + MYSQL Mybatis Plus + Redis
 前端：采用基于Uniapp、Vue3、Element UI Plus，前后端分离，支持微信小程序、h5等
-<p>后台截图：</p>
-<p><img src="https://fuint-cn.oss-cn-shenzhen.aliyuncs.com/uploads/cc331ab519f64be9bb0e198cab595b12.png" alt="登录界面"></p>
-<p><img src="https://fuint-health.oss-cn-shenzhen.aliyuncs.com/static/g4.png" alt="后台商品编辑截图"></p>
-<p><img src="https://fuint-health.oss-cn-shenzhen.aliyuncs.com/static/g5.png" alt="后台统计功能截图"></p>
-<p>收银系统：</p>
-代客下单和收银系统，支持余额、微信、支付宝等支付渠道，已对接好扫码枪、扫码盒子、云打印机，订单提交后自动打印小票。
-<p><img src="https://fuint-cn.oss-cn-shenzhen.aliyuncs.com/uploads/bdb4d01a0e984864b54cd641977053e8.png" alt="收银首页"></p>
-前端使用技术<br>
-2.1 Vue3<br>
-2.2 Uniapp<br>
-2.3 Element UI Plus
-2.4 Nodejs
 
-后端使用技术<br>
-1.1 SpringBoot 3.2<br>
-1.2 Mybatis Plus<br>
-1.3 Maven<br>
-1.4 SpringSecurity<br>
-1.5 Druid<br>
-1.6 Slf4j<br>
-1.7 Fastjson<br>
-1.8 JWT<br>
-1.9 Redis<br>
-1.10 Quartz<br>
-1.11 Mysql 5.7或8版<br>
-1.12 Swagger UI<br>
+#### 后台截图：
+![fuint美业会登录界面](assets/g2.png)
+
+![fuint美业后台商品编辑截图](assets/g4.png)
+
+![fuint美业后台统计功能截图](assets/g5.png)
+
+#### 收银系统：
+代客下单和收银系统，支持余额、微信、支付宝等支付渠道，已对接好扫码枪、扫码盒子、云打印机，订单提交后自动打印小票。
+![fuint美业收银首页截图](assets/cashier.png)
+
+#### 前端使用技术：
+1. Vue3
+2. Uniapp
+3. Element UI Plus
+4. Nodejs
+
+#### 后端使用技术
+1. SpringBoot 3.2
+2. Mybatis Plus
+3. Maven
+4. SpringSecurity
+5. Druid
+6. Slf4j
+7. Fastjson
+8. JWT
+9. Redis
+10. Quartz
+11. Mysql 5.7或8版
+12. Swagger UI
 
 
 #### 安装步骤
@@ -57,7 +60,7 @@ fuint康养美业是一款专为美容、康养（如SPA、医美、养生馆、
 1. 导入db目录下的数据库文件。
 2. 修改config目录下的配置文件。
 3. 将工程打包，把jar包上传并执行。
-<p>提示：无后端和linux基础的朋友，可以使用<b>宝塔</b>部署，非常方便简单。</p>
+提示：无后端和linux基础的朋友，可以使用<b>宝塔</b>部署，非常方便简单。
 
 
 #### 前台使用说明
@@ -86,6 +89,9 @@ fuint康养美业是一款专为美容、康养（如SPA、医美、养生馆、
 15. 员工管理：员工新增、编辑等。
 16. 系统管理：菜单、角色、权限管理。
 
+#### 系统脑图：
+![fuint美业脑图](assets/system.png)
+
 #### 开发计划
 1. 更完善的报表统计；
 2. 店铺装修功能；
@@ -103,10 +109,10 @@ fuint康养美业是一款专为美容、康养（如SPA、医美、养生馆、
 官方网站：https://www.fuint.cn <br>
 开源不易，感谢支持！<br>
 <b>作者wx：fsq_better：</b><br>
-<p><img src="https://fuint-cn.oss-cn-shenzhen.aliyuncs.com/screenshots/qr.png" alt="公众号二维码"></p>
+![fuint美业公众号二维码](assets/qr.png)
 
 
-特别鸣谢：<br>
-Mybaits Plus: https://github.com/baomidou/mybatis-plus<br>
-Vue: https://github.com/vuejs/vue<br>
-Element UI: https://element.eleme.cn
+特别鸣谢：
+1. Mybaits Plus: https://github.com/baomidou/mybatis-plus<br>
+2. Vue: https://github.com/vuejs/vue<br>
+3. Element UI: https://element.eleme.cn
