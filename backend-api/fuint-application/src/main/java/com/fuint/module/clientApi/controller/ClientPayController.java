@@ -13,14 +13,11 @@ import com.fuint.common.util.TokenUtil;
 import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.framework.web.BaseController;
 import com.fuint.framework.web.ResponseObject;
+import com.fuint.repository.model.MtOrderPay;
 import com.fuint.repository.model.MtSetting;
 import com.fuint.repository.model.MtUser;
 import com.fuint.repository.model.MtUserGrade;
 import com.fuint.utils.StringUtil;
-import com.ijpay.alipay.AliPayApi;
-import com.ijpay.core.kit.HttpKit;
-import com.ijpay.core.kit.WxPayKit;
-import com.ijpay.wxpay.WxPayApiConfigKit;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.AllArgsConstructor;
@@ -69,6 +66,11 @@ public class ClientPayController extends BaseController {
      * 订单服务接口
      * */
     private OrderService orderService;
+
+    /**
+     * 订单支付单服务接口
+     * */
+    private OrderPayService orderPayService;
 
     /**
      * 会员服务接口
@@ -188,15 +190,19 @@ public class ClientPayController extends BaseController {
             BigDecimal tranAmount = new BigDecimal(tranAmt).divide(new BigDecimal("100"), BigDecimal.ROUND_CEILING, 4);
             // 参数校验
             if (StringUtil.isNotEmpty(orderSn) && StringUtil.isNotEmpty(tranAmt) && StringUtil.isNotEmpty(orderId)) {
-                UserOrderDto orderInfo = orderService.getOrderByOrderSn(orderSn);
+                UserOrderDto orderInfo = orderService.getOrderByPaySn(orderSn);
                 if (orderInfo != null) {
                     String result = resData.get("return_code");
                     if (!result.equals("SUCCESS")) {
                         logger.error("微信支付回调接口验签失败");
                         return;
                     }
-                    // 订单金额
+                    // 以发起支付时记录的支付单金额为准，避免运营改价后误判“金额不匹配”
                     BigDecimal payAmount = orderInfo.getPayAmount();
+                    MtOrderPay orderPay = orderPayService.getPayLogByPaySn(orderSn);
+                    if (orderPay != null && orderPay.getAmount() != null) {
+                        payAmount = orderPay.getAmount();
+                    }
                     int compareFlag = tranAmount.compareTo(payAmount);
                     if (compareFlag == 0) { // 支付金额正确
                         if (orderInfo.getStatus().equals(OrderStatusEnum.CREATED.getKey())) {
@@ -223,25 +229,19 @@ public class ClientPayController extends BaseController {
     /**
      * 微信退款通知
      */
-    @RequestMapping(value = "/weixinRefundNotify", method = {RequestMethod.POST, RequestMethod.GET})
+    @RequestMapping(value = "/weixinRefundNotify", method = {RequestMethod.POST, RequestMethod.GET}, produces = "application/json;charset=UTF-8")
     @ResponseBody
     public String weixinRefundNotify(HttpServletRequest request) {
-        String xmlMsg = CommonUtil.readRequestBody(request);
-        logger.info("退款通知 = " + xmlMsg);
-        Map<String, String> params = WxPayKit.xmlToMap(xmlMsg);
-        String returnCode = params.get("return_code");
-        // 注意重复通知的情况，同一订单号可能收到多次通知，请注意一定先判断订单状态
-        if (WxPayKit.codeIsOk(returnCode)) {
-            String reqInfo = params.get("req_info");
-            String decryptData = WxPayKit.decryptData(reqInfo, WxPayApiConfigKit.getWxPayApiConfig().getPartnerKey());
-            logger.info("退款通知解密后的数据 = " + decryptData);
-            // 发送通知等
-            Map<String, String> xml = new HashMap<>(2);
-            xml.put("return_code", "SUCCESS");
-            xml.put("return_msg", "OK");
-            return WxPayKit.toXml(xml);
+        // APIv3 回调 resource 为密文，需先验签再解密
+        String decryptData = weixinService.decryptNotify(request);
+        if (StringUtil.isEmpty(decryptData)) {
+            logger.error("退款通知验签或解密失败");
+            return null;
         }
-        return null;
+        // 注意重复通知的情况，同一订单号可能收到多次通知，请注意一定先判断订单状态
+        logger.info("退款通知解密后的数据 = " + decryptData);
+        // 发送通知等
+        return "{\"code\":\"SUCCESS\",\"message\":\"成功\"}";
     }
 
     /**
@@ -263,7 +263,7 @@ public class ClientPayController extends BaseController {
             Boolean verifyResult = alipayService.checkCallBack(params);
             if (verifyResult) {
                 logger.info("支付宝验证成功 success");
-                UserOrderDto orderInfo = orderService.getOrderByOrderSn(orderSn);
+                UserOrderDto orderInfo = orderService.getOrderByPaySn(orderSn);
                 Boolean flag = paymentService.paymentCallback(orderInfo);
                 if (flag) {
                     return "success";
