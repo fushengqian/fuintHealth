@@ -1,9 +1,5 @@
 package com.fuint.module.backendApi.controller.order;
 
-
-
-
-
 import java.util.stream.Collectors;
 import java.util.Objects;
 import java.io.IOException;
@@ -231,13 +227,13 @@ public class BackendOrderController extends BaseController {
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('order:edit')")
     public ResponseObject save(@RequestBody Map<String, Object> param) throws BusinessCheckException {
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
         Integer orderId = param.get("orderId") == null ? 0 : Integer.parseInt(param.get("orderId").toString());
         String status = param.get("status") == null ? "" : param.get("status").toString();
         String amount = param.get("amount") == null ? "" : param.get("amount").toString();
         String discount = param.get("discount") == null ? "" : param.get("discount").toString();
         String remark = param.get("remark") == null ? "" : param.get("remark").toString();
         String orderMode = param.get("orderMode") == null ? "" : param.get("orderMode").toString();
-        AccountInfo accountInfo = TokenUtil.getAccountInfo();
         if (orderId < 0) {
             return getFailureResult(201, "系统出错啦，订单ID不能为空");
         }
@@ -316,7 +312,7 @@ public class BackendOrderController extends BaseController {
     @Operation(summary="最新订单列表查询")
     @RequestMapping(value = "/latest", method = RequestMethod.POST)
     @CrossOrigin
-    public ResponseObject latest(@RequestBody OrderListParam orderListParam) throws BusinessCheckException {
+    public ResponseObject latest(@RequestBody OrderListParam orderListParam) {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
 
         Map<String, Object> result = new HashMap<>();
