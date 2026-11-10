@@ -40,7 +40,7 @@
       <block v-for="(item, index) in userAssetsItems" :key="index">
         <view class="asset-card-item" @click="onUserAsset(item)">
           <view class="asset-card-icon">
-            <text class="iconfont" :class="iconClass(item.icon)" :style="{ color: 'var(--theme-primary)' }"></text>
+            <text class="iconfont" :class="item.iconCls" :style="{ color: 'var(--theme-primary)' }"></text>
           </view>
           <view class="asset-card-value">{{ assetValue(item) }}</view>
           <view class="asset-card-label">{{ item.name }}</view>
@@ -56,9 +56,10 @@
         </view>
         <scroll-view scroll-x>
             <view class="recharge">
-                <view class="recharge-item" :class="current == index ? 'recharge-item-active': ''" v-for="(item, index) in vipItems" :key="index" :style="{marginLeft: !index ? '30rpx': ''}" @click="onShowPopup(index)">
+                <view class="recharge-item" :class="[current == index ? 'recharge-item-active' : '', item.owned ? 'recharge-item-owned' : '']" v-for="(item, index) in vipItems" :key="index" :style="{marginLeft: !index ? '30rpx': ''}" @click="onShowPopup(index)">
                     <view class="recharge-tag">
-                        <text class="recharge-tag-text" v-if="parseInt(item.days) > 0">{{ item.days }}天有效期</text>
+                        <text class="recharge-tag-text" v-if="item.owned">已购买</text>
+                        <text class="recharge-tag-text" v-else-if="parseInt(item.days) > 0">{{ item.days }}天有效期</text>
                         <text class="recharge-tag-text" v-else>永久有效期</text>
                     </view>
                     <text class="recharge-item-duration">{{ item.name }}</text>
@@ -79,7 +80,7 @@
     <view class="order-navbar" v-if="compVisible('orderEntry')" :style="{ order: compOrder('orderEntry') }">
       <view class="order-navbar-item" v-for="(item, index) in orderItems" :key="index" @click="onTargetOrder(item)">
         <view class="item-icon">
-          <text class="iconfont" :class="iconClass(item.icon)"></text>
+          <text class="iconfont" :class="item.iconCls"></text>
         </view>
         <view class="item-name">{{ item.name }}</view>
         <text class="order-badge" v-if="item.count > 0">{{ item.count }}</text>
@@ -104,17 +105,17 @@
     <view class="my-service" v-if="compVisible('serviceGrid')" :style="{ order: compOrder('serviceGrid') }">
       <view class="service-title">{{ serviceTitle }}</view>
       <view class="service-content clearfix" :class="'service-col-' + serviceColumns">
-        <block v-for="(item, index) in service" :key="index">
+        <block v-for="(item, index) in serviceItems" :key="index">
           <view v-if="item.type == 'link'" class="service-item" @click="handleService(item)">
             <view class="item-icon">
-              <text class="iconfont" :class="iconClass(item.icon)"></text>
+              <text class="iconfont" :class="item.iconCls"></text>
             </view>
             <view class="item-name">{{ item.name }}</view>
           </view>
           <view v-if="item.type == 'button' && $platform == 'MP-WEIXIN'" class="service-item">
             <button class="btn-normal" :open-type="item.openType">
               <view class="item-icon">
-                <text class="iconfont" :class="iconClass(item.icon)"></text>
+                <text class="iconfont" :class="item.iconCls"></text>
               </view>
               <view class="item-name">{{ item.name }}</view>
             </button>
@@ -282,6 +283,8 @@
         // 显示、隐藏弹窗
         showPopup: false,
         memberGrade: [],
+        // 后端是否已返回可升级等级（用于区分"未拉到数据"与"无可升级等级"）
+        gradeLoaded: false,
         curGrade: {},
         storeList: [],
         // 个人中心页面装修配置
@@ -451,8 +454,9 @@
                  });
              }
 
-              app.gradeInfo = result.data.gradeInfo;
-              app.memberGrade = result.data.memberGrade;
+              app.gradeInfo = result.data.gradeInfo || {};
+              app.memberGrade = result.data.memberGrade || [];
+              app.gradeLoaded = true;
               app.gradeEndTime = result.data.gradeEndTime;
               app.isMerchant = result.data.isMerchant;
               resolve(app.userInfo);
@@ -640,10 +644,20 @@
 
       // 会员等级
       onShowPopup(index) {
-        this.showPopup = !this.showPopup
+        const item = this.vipItems[index] || {}
+        // 已购买的等级不允许重复购买
+        if (item.owned) {
+          this.$toast('您已是该等级会员，无需重复购买')
+          return
+        }
+        // 装修配置的套餐缺少等级ID，无法下单
+        if (!item.id) {
+          this.$toast('该套餐暂不支持在线购买')
+          return
+        }
         this.current = index
-        // 优先使用后端实时套餐数据(支付需要套餐id)，其次使用后台装修配置
-        this.curGrade = this.memberGrade[index] || this.vipItems[index]
+        this.showPopup = true
+        this.curGrade = item
       },
 
       // 跳转到会员码
@@ -727,6 +741,15 @@
         return { background: 'var(--theme-primary)' }
       },
 
+      // 我的服务列表（预生成 iconfont 类名：小程序端 :class 绑定不支持函数调用）
+      serviceItems() {
+        const app = this
+        return (app.service || []).map(item => ({
+          ...item,
+          iconCls: app.iconClass(item.icon)
+        }))
+      },
+
       // 我的资产列表
       userAssetsItems() {
         const comp = this.getComp('userAssets')
@@ -741,6 +764,7 @@
           const target = defaultItems.find(d => d.name === name)
           return {
             ...item,
+            iconCls: this.iconClass(item.icon),
             url: item.url || item.link || (target ? target.url : '')
           }
         })
@@ -761,6 +785,7 @@
             id: key,
             name: item.name,
             icon: item.icon,
+            iconCls: app.iconClass(item.icon),
             count: app.isLogin ? (app.todoCounts[key] || 0) : 0
           }
         })
@@ -786,10 +811,23 @@
       // 会员升级套餐列表
       vipItems() {
         const app = this
-        const comp = app.getComp('vipUpgrade')
-        const configItems = (comp && comp.data && comp.data.items && comp.data.items.length > 0) ? comp.data.items : []
-        if (configItems.length > 0) {
-          return configItems.map(item => ({
+        const gradeInfo = app.gradeInfo || {}
+        const curGradeId = app.userInfo.gradeId || 0
+        // 当前等级是否为付费等级（付费等级才需要展示"已购买"）
+        const curIsPay = gradeInfo.catchType === 'pay' && gradeInfo.id > 0
+        let list = []
+        // 优先使用后端实时套餐（含等级ID，可下单）
+        if (app.memberGrade && app.memberGrade.length > 0) {
+          list = app.memberGrade.map(item => Object.assign({}, item, {
+            days: item.validDay || 0,
+            price: item.catchValue
+          }))
+        } else if (!app.gradeLoaded) {
+          // 接口尚未返回等级数据时，用后台装修配置兜底（无等级ID，仅展示）
+          const comp = app.getComp('vipUpgrade')
+          const configItems = (comp && comp.data && comp.data.items && comp.data.items.length > 0) ? comp.data.items : []
+          list = configItems.map(item => ({
+            id: 0,
             name: item.name,
             days: item.days || 0,
             price: item.price || 0,
@@ -798,14 +836,20 @@
             speedPoint: 0
           }))
         }
-        return (app.memberGrade || []).map(item => ({
-          name: item.name,
-          days: item.validDay || 0,
-          price: item.catchValue,
-          desc: '',
-          discount: item.discount || 0,
-          speedPoint: item.speedPoint || 0
-        }))
+        // 标记已购买的等级
+        list.forEach(item => {
+          item.owned = (item.id > 0 && curGradeId > 0 && item.id == curGradeId)
+            || (item.id <= 0 && curIsPay && item.name === gradeInfo.name)
+        })
+        // 当前等级不在可升级列表中时补一条，用于提示已购买
+        if (curIsPay && !list.some(item => item.owned)) {
+          list.unshift(Object.assign({}, gradeInfo, {
+            days: gradeInfo.validDay || 0,
+            price: gradeInfo.catchValue,
+            owned: true
+          }))
+        }
+        return list
       },
 
       // 我的服务标题
@@ -1220,6 +1264,18 @@
                 &-active {
                     border: solid 2rpx #EDD2A9;
                     background-color: #FBF1E5;
+                }
+
+                // 已购买的等级：置灰且不可再下单
+                &-owned {
+                    border: solid 1rpx #E6E6E6;
+                    background-color: #F7F7F7;
+
+                    .recharge-item-duration,
+                    .recharge-item-price-text,
+                    .recharge-item-des {
+                        color: #A5A3A2;
+                    }
                 }
 
                 &-duration {
