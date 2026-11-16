@@ -24,11 +24,21 @@
         </block>
         <block v-else>
           <view class="block-left dis-flex flex-y-end">
-            <!-- 商品售价 -->
-            <text class="floor-price__samll">￥</text>
-            <text class="floor-price">{{ goods.price }}</text>
-            <!-- 划线价 -->
-            <text class="original-price">￥{{ goods.linePrice }}</text>
+            <!-- 会员价：登录会员且商品设置了会员价时展示，结算按会员价×等级折扣 -->
+            <block v-if="isMember && goods.memberPrice > 0">
+              <text class="member-price-tag">会员价</text>
+              <text class="floor-price__samll">￥</text>
+              <text class="floor-price">{{ goods.memberPrice }}</text>
+              <!-- 原价 -->
+              <text class="original-price">￥{{ goods.price }}</text>
+            </block>
+            <block v-else>
+              <!-- 商品售价 -->
+              <text class="floor-price__samll">￥</text>
+              <text class="floor-price">{{ goods.price }}</text>
+              <!-- 划线价 -->
+              <text class="original-price">￥{{ goods.linePrice }}</text>
+            </block>
           </view>
           <view class="block-right dis-flex">
             <!-- 销量 -->
@@ -189,7 +199,7 @@
 </template>
 
 <script>
-  import { setCartTabBadge, setCartTotalNum } from '@/utils/app'
+  import { setCartTabBadge, setCartTotalNum, checkLogin } from '@/utils/app'
   import * as GoodsApi from '@/api/goods'
   import * as GoodsCommentApi from '@/api/goodsComment'
   import * as CartApi from '@/api/cart'
@@ -212,6 +222,10 @@
       // 是否积分兑换商品：是则展示积分数、隐藏现金购买入口
       isPointGoods() {
         return this.goods && this.goods.isPointGoods === 'Y'
+      },
+      // 是否已登录会员（所有注册用户均为会员）
+      isMember() {
+        return checkLogin()
       },
       // 商品详情是否包含实质内容（空壳HTML如 <p><br></p> 视为无内容）
       hasDescription() {
