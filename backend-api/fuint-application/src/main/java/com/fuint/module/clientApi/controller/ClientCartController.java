@@ -310,7 +310,12 @@ public class ClientCartController extends BaseController {
         if (merchantId <= 0) {
             merchantId = mtUser.getMerchantId();
         }
-        result = orderService.calculateCartGoods(merchantId, mtUser.getId(), cartList, userCouponId, isUsePoint, platform, orderMode, couponIds);
+        // 收银端游客模式（未关联会员）按原价计价，购物车归属不变
+        Integer calcUserId = mtUser.getId();
+        if (userInfo == null && (userId == null || userId <= 0)) {
+            calcUserId = 0;
+        }
+        result = orderService.calculateCartGoods(merchantId, calcUserId, cartList, userCouponId, isUsePoint, platform, orderMode, couponIds);
 
         return getSuccessResult(result);
     }
